@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Divisibility & Fraction Mastery</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --accent: #38bdf8;
+      --gold: #facc15;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; }
+
+    header { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+    h1 { font-size: 1.5rem; color: var(--accent); }
+    .nav-btn { background: var(--border); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .nav-btn:hover { background: #475569; }
+
+    .container { width: 100%; max-width: 900px; }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Map View */
+    .level-section { margin-bottom: 25px; }
+    .level-title { font-size: 1.2rem; font-weight: bold; color: var(--gold); margin-bottom: 10px; border-left: 4px solid var(--gold); padding-left: 10px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    
+    .star-node { background: var(--card-bg); border: 2px solid var(--border); border-radius: 14px; padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .star-node.unlocked { border-color: var(--accent); }
+    .star-node.unlocked:hover { border-color: var(--gold); transform: translateY(-3px); }
+    .star-node.cleared { border-color: var(--success); background: rgba(34, 197, 94, 0.1); }
+    .star-node.locked { opacity: 0.4; cursor: not-allowed; }
+    .star-icon { font-size: 1.8rem; margin-bottom: 4px; }
+
+    /* Game View */
+    .game-card { background: var(--card-bg); border-radius: 20px; padding: 30px 20px; border: 1px solid var(--border); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    .level-badge { background: var(--border); color: var(--accent); padding: 6px 16px; border-radius: 20px; font-weight: 700; display: inline-block; margin-bottom: 15px; }
+
+    .rule-banner { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 14px 18px; border-radius: 12px; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.5; text-align: left; }
+
+    /* Streak Tracker (5 Dots) */
+    .tracker { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .dot { width: 28px; height: 28px; border-radius: 50%; background: #475569; transition: all 0.3s; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: var(--bg); font-weight: bold; }
+    .dot.active { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+
+    .question-box { font-size: 1.3rem; font-weight: bold; margin: 15px 0 20px 0; min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
+
+    /* Input Areas */
+    .input-area { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; margin-top: 10px; }
+    
+    .choice-group { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; width: 100%; max-width: 500px; }
+    .btn-choice { flex: 1; min-width: 130px; padding: 12px 16px; font-size: 1.1rem; font-weight: bold; border-radius: 12px; border: 2px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; transition: 0.2s; }
+    .btn-choice:hover { border-color: var(--accent); background: #1e293b; }
+    .btn-choice.active { border-color: var(--gold); background: rgba(250, 204, 21, 0.2); }
+
+    .single-input { width: 100%; max-width: 180px; padding: 10px; font-size: 1.4rem; font-weight: bold; text-align: center; background: #0f172a; color: #fff; border: 2px solid var(--accent); border-radius: 10px; outline: none; }
+    .single-input:focus { border-color: var(--gold); }
+
+    /* Multi-select Cards Grid */
+    .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 440px; }
+    .card-item { background: var(--bg); border: 2px solid var(--border); border-radius: 12px; padding: 16px; font-size: 1.4rem; font-weight: bold; cursor: pointer; transition: all 0.2s; user-select: none; }
+    .card-item.selected { border-color: var(--gold); background: rgba(250, 204, 21, 0.15); box-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
+
+    /* Drag and Drop Zone CSS (Level 3B) */
+    .drag-cards-pool { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 550px; min-height: 60px; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 2px dashed var(--border); border-radius: 12px; margin-bottom: 15px; }
+    .drag-card-item { background: var(--card-bg); border: 2px solid var(--accent); color: var(--gold); font-size: 1.3rem; font-weight: bold; padding: 10px 18px; border-radius: 10px; cursor: grab; user-select: none; transition: transform 0.2s, border-color 0.2s; }
+    .drag-card-item:active { cursor: grabbing; transform: scale(1.05); }
+    .drag-card-item.active-tap { border-color: var(--gold); box-shadow: 0 0 12px var(--gold); }
+
+    .drop-zones-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; width: 100%; max-width: 650px; }
+    .drop-zone { background: var(--bg); border: 2px dashed var(--border); border-radius: 14px; padding: 12px 8px; min-height: 120px; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; cursor: pointer; }
+    .drop-zone.drag-over { border-color: var(--gold); background: rgba(250, 204, 21, 0.08); }
+    .drop-zone-title { font-size: 0.85rem; font-weight: bold; color: var(--accent); margin-bottom: 8px; text-align: center; }
+
+    /* Fraction Display and Input */
+    .display-fraction { display: inline-flex; flex-direction: column; align-items: center; font-size: 1.8rem; font-weight: bold; vertical-align: middle; margin: 0 6px; }
+    .display-fraction .bar { width: 100%; height: 3px; background-color: var(--text); margin: 2px 0; }
+    
+    .fraction-input { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+    .fraction-input input { width: 80px; height: 50px; text-align: center; font-size: 1.5rem; font-weight: bold; border: 2px solid var(--accent); border-radius: 8px; background: #0f172a; color: #fff; outline: none; }
+    .fraction-input input:focus { border-color: var(--gold); }
+    .fraction-bar { width: 85px; height: 4px; background-color: var(--text); border-radius: 2px; }
+
+    .submit-btn { background: var(--accent); color: #0f172a; border: none; padding: 12px 32px; font-size: 1.1rem; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+    .submit-btn:hover { background: #7dd3fc; transform: translateY(-2px); }
+
+    .feedback-banner { min-height: 45px; font-size: 1.1rem; font-weight: bold; margin-top: 20px; line-height: 1.4; }
+    .txt-correct { color: var(--success); }
+    .txt-incorrect { color: var(--danger); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>⭐ Divisibility & Fraction Mastery</h1>
+    <button class="nav-btn" onclick="showMap()">Level Map</button>
+  </header>
+
+  <div class="container">
+    <!-- MAP SCREEN -->
+    <div id="map-view" class="view active">
+      <h2 style="text-align: center; margin-bottom: 4px;">Skill Progression Map</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">Answer <b>5 consecutive questions</b> correctly to pass each sub-level.</p>
+      <div id="map-sections"></div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-view" class="view">
+      <div class="game-card">
+        <div id="lvl-badge" class="level-badge">Level 1A</div>
+        
+        <div id="rule-banner" class="rule-banner"></div>
+
+        <div class="tracker">
+          <div id="dot-1" class="dot">1</div>
+          <div id="dot-2" class="dot">2</div>
+          <div id="dot-3" class="dot">3</div>
+          <div id="dot-4" class="dot">4</div>
+          <div id="dot-5" class="dot">5</div>
+        </div>
+
+        <div id="question-box" class="question-box"></div>
+        <div id="input-area" class="input-area"></div>
+
+        <div id="feedback-banner" class="feedback-banner"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const subLevels = [
+      // Level 1: Divisibility by 2
+      { id: '1A', group: 'Level 1: Divisibility by 2', title: "Rule Check (Divisible by 2)", desc: "Is a single number divisible by 2?" },
+      { id: '1B', group: 'Level 1: Divisibility by 2', title: "Mechanics Check", desc: "Select all numbers ending in an even digit." },
+      { id: '1C', group: 'Level 1: Divisibility by 2', title: "Fraction Simplification", desc: "Simplify fractions divisible by 2 (60%) or 4 (40%)." },
+
+      // Level 2: Divisibility by 3
+      { id: '2A', group: 'Level 2: Divisibility by 3', title: "Rule Check (Divisible by 3)", desc: "Find digit sum first, then test divisibility." },
+      { id: '2B', group: 'Level 2: Divisibility by 3', title: "Mechanics Check", desc: "Select all numbers divisible by 3 (digit sums < 20)." },
+      { id: '2C', group: 'Level 2: Divisibility by 3', title: "Fraction Simplification", desc: "Simplify fractions divisible by 3 or 9." },
+
+      // Level 3: Divisibility by 5 & 10
+      { id: '3A', group: 'Level 3: Divisibility by 5 & 10', title: "Rule Check (5 & 10)", desc: "Classify as Divisible by 5 ONLY, BOTH, or Neither." },
+      { id: '3B', group: 'Level 3: Divisibility by 5 & 10', title: "Drag & Drop Categorization", desc: "Drag 4 numbers into 3 drop zones." },
+      { id: '3C', group: 'Level 3: Divisibility by 5 & 10', title: "Fraction Simplification", desc: "Simplify fractions divisible by 5 or 10." },
+
+      // Level 4: Divisibility by 25
+      { id: '4A', group: 'Level 4: Divisibility by 25', title: "Rule Check (Divisible by 25)", desc: "Is a single number divisible by 25?" },
+      { id: '4B', group: 'Level 4: Divisibility by 25', title: "Mechanics Check", desc: "Select all numbers divisible by 25." },
+      { id: '4C', group: 'Level 4: Divisibility by 25', title: "Fraction Simplification", desc: "Simplify fractions up to 200 (divisible by 25 once)." },
+
+      // Level 5: Mixed Single Simplification
+      { id: '5A', group: 'Level 5: Mixed Single Simplification', title: "Mixed Divisibility Check", desc: "Test divisibility for 2, 3, 5, 10, or 25." },
+      { id: '5B', group: 'Level 5: Mixed Single Simplification', title: "Mixed Mechanics Check", desc: "Select numbers matching random divisibility rules." },
+      { id: '5C', group: 'Level 5: Mixed Single Simplification', title: "Single-Step Fractions", desc: "Simplify fractions using 2, 3, 5, 10, or 25 ONCE." },
+
+      // Level 6: Double / Multi-Step Simplification
+      { id: '6A', group: 'Level 6: Double Simplification', title: "Composite Divisibility Check", desc: "Test divisibility by composite numbers (6, 100, etc.)." },
+      { id: '6B', group: 'Level 6: Double Simplification', title: "Multi-Step Mechanics", desc: "Select numbers divisible by composite factors." },
+      { id: '6C', group: 'Level 6: Double Simplification', title: "Double Reduction Fractions", desc: "Fractions requiring 2 steps (or dividing by 6, 9, 100)." }
+    ];
+
+    let maxUnlocked = 0;
+    let completedSubLevels = [];
+    let currentLvlIdx = 0;
+    let streak = 0;
+    let currentQ = null;
+    let selectedCards = [];
+    let stepChoice2A = null;
+
+    // Drag & Drop State
+    let activeTapCard = null;
+    let dropZoneState = { '5': [], 'both': [], 'neither': [] };
+
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+    function digitSum(n) { return String(n).split('').reduce((sum, d) => sum + parseInt(d), 0); }
+
+    // Master Question Generator
+    function buildQuestion(lvlIdx) {
+      // --- LEVEL 1: DIVISIBILITY BY 2 ---
+      if (lvlIdx === 0) { // 1A
+        let num = randInt(100, 999);
+        return {
+          type: 'yesno',
+          rule: "💡 <b>Divisibility Rule for 2:</b> A number is divisible by 2 if its <b>last digit</b> is even (<b>0, 2, 4, 6, 8</b>).",
+          prompt: `Is <span style="font-size: 2.2rem; color: var(--gold);">${num}</span> divisible by 2?`,
+          ans: (num % 2 === 0)
+        };
+      }
+      if (lvlIdx === 1) { // 1B
+        let numbers = generateUniqueSet(4, n => n % 2 === 0);
+        return {
+          type: 'multiselect',
+          rule: "💡 <b>Mechanics Check:</b> Look at the last digit of each number. Select <b>ALL</b> numbers divisible by 2.",
+          prompt: "Tap all numbers that are <b>DIVISIBLE BY 2</b>:",
+          numbers: numbers,
+          ans: numbers.filter(n => n % 2 === 0)
+        };
+      }
+      if (lvlIdx === 2) { // 1C: 60% by 2, 40% by 4
+        const simpleBases = [{n: 1, d: 2}, {n: 1, d: 3}, {n: 2, d: 3}, {n: 1, d: 4}, {n: 3, d: 4}, {n: 1, d: 5}, {n: 2, d: 5}, {n: 3, d: 5}, {n: 4, d: 5}, {n: 1, d: 7}, {n: 2, d: 7}, {n: 3, d: 7}, {n: 4, d: 7}, {n: 5, d: 7}];
+        let base = simpleBases[randInt(0, simpleBases.length - 1)];
+        let mult = (Math.random() < 0.6) ? 2 : 4; // 60% div by 2, 40% div by 4
+        return {
+          type: 'fraction',
+          rule: "💡 <b>Fraction Rule (2 or 4):</b> Divide top and bottom by 2 (or 4) to simplify!",
+          prompt: "Simplify to lowest terms:",
+          origNum: base.n * mult,
+          origDen: base.d * mult,
+          ans: { num: base.n, den: base.d },
+          checkDivisor: mult
+        };
+      }
+
+      // --- LEVEL 2: DIVISIBILITY BY 3 ---
+      if (lvlIdx === 3) { // 2A
+        let num = randInt(100, 999);
+        let dSum = digitSum(num);
+        return {
+          type: 'twoStep2A',
+          rule: "💡 <b>Divisibility Rule for 3:</b> Add up all digits!<br><b>Example:</b> <code>1251</code> is divisible by 3 because <code>1 + 2 + 5 + 1 = 9</code>, and 9 is divisible by 3.",
+          prompt: `Check divisibility for <span style="font-size: 2.2rem; color: var(--gold);">${num}</span>:`,
+          num: num,
+          ansSum: dSum,
+          ansDivisible: (dSum % 3 === 0)
+        };
+      }
+      if (lvlIdx === 4) { // 2B: Small sums < 20
+        let numbers = [];
+        let targetMatches = randInt(1, 3);
+        while(numbers.length < 4) {
+          let cand = randInt(12, 199);
+          if (!numbers.includes(cand) && digitSum(cand) < 20) {
+            let matches = (cand % 3 === 0);
+            if (matches && numbers.filter(n => n % 3 === 0).length < targetMatches) numbers.push(cand);
+            else if (!matches && numbers.filter(n => n % 3 !== 0).length < (4 - targetMatches)) numbers.push(cand);
+          }
+        }
+        numbers.sort(() => Math.random() - 0.5);
+
+        return {
+          type: 'multiselect',
+          rule: "💡 <b>Mechanics Check:</b> Add the digits together. If the sum is in 3, 6, 9, 12, 15, 18..., select it!",
+          prompt: "Tap all numbers that are <b>DIVISIBLE BY 3</b>:",
+          numbers: numbers,
+          ans: numbers.filter(n => n % 3 === 0)
+        };
+      }
+      if (lvlIdx === 5) { // 2C: Multipliers 3 or 9
+        const simpleBases = [{n: 1, d: 2}, {n: 1, d: 4}, {n: 3, d: 4}, {n: 1, d: 5}, {n: 2, d: 5}, {n: 4, d: 5}, {n: 1, d: 7}, {n: 2, d: 7}];
+        let base = simpleBases[randInt(0, simpleBases.length - 1)];
+        let mult = [3, 9][randInt(0, 1)];
+        return {
+          type: 'fraction',
+          rule: "💡 <b>Fraction Rule (3 or 9):</b> Use the digit sum rule! Divide numerator & denominator by 3 or 9.",
+          prompt: "Simplify to lowest terms:",
+          origNum: base.n * mult,
+          origDen: base.d * mult,
+          ans: { num: base.n, den: base.d },
+          checkDivisor: mult
+        };
+      }
+
+      // --- LEVEL 3: DIVISIBILITY BY 5 & 10 ---
+      if (lvlIdx === 6) { // 3A
+        let category = randInt(1, 3);
+        let num;
+        if (category === 1) num = randInt(10, 99) * 10 + 5;
+        else if (category === 2) num = randInt(10, 99) * 10;
+        else {
+          num = randInt(100, 999);
+          while (num % 5 === 0) num++;
+        }
+        let ansText = category === 1 ? '5' : (category === 2 ? 'both' : 'neither');
+
+        return {
+          type: 'choice3',
+          rule: "💡 <b>Rules for 5 & 10:</b><br>• Ends in <b>5 ONLY</b> $\\rightarrow$ Divisible by <b>5 ONLY</b>.<br>• Ends in <b>0</b> $\\rightarrow$ Divisible by <b>BOTH 5 and 10</b>.<br>• Ends in anything else $\\rightarrow$ <b>Neither</b>.",
+          prompt: `Is <span style="font-size: 2.2rem; color: var(--gold);">${num}</span> divisible by 5 ONLY, BOTH 5 & 10, or Neither?`,
+          ans: ansText
+        };
+      }
+      if (lvlIdx === 7) { // 3B: Drag and Drop 4 numbers into 3 drop zones
+        let n1 = randInt(10, 89) * 10 + 5; // 5 only
+        let n2 = randInt(10, 89) * 10;     // Both
+        let n3 = randInt(100, 899); while(n3 % 5 === 0) n3++; // Neither
+        let n4 = randInt(100, 899);
+
+        let numbers = [n1, n2, n3, n4].sort(() => Math.random() - 0.5);
+
+        let correctMap = {};
+        numbers.forEach(n => {
+          if (n % 10 === 0) correctMap[n] = 'both';
+          else if (n % 5 === 0) correctMap[n] = '5';
+          else correctMap[n] = 'neither';
+        });
+
+        return {
+          type: 'dragDrop3B',
+          rule: "💡 <b>Drag & Drop Categorization:</b> Drag each card into its drop zone (or tap a card, then tap a zone)!",
+          prompt: "Place all 4 numbers into their correct zones:",
+          numbers: numbers,
+          ansMap: correctMap
+        };
+      }
+      if (lvlIdx === 8) { // 3C: Diverse Denominators
+        const basePool3C = [
+          {n: 1, d: 2}, {n: 1, d: 3}, {n: 2, d: 3}, {n: 1, d: 4}, {n: 3, d: 4},
+          {n: 1, d: 6}, {n: 5, d: 6}, {n: 1, d: 7}, {n: 2, d: 7}, {n: 3, d: 7},
+          {n: 4, d: 7}, {n: 5, d: 7}, {n: 1, d: 8}, {n: 3, d: 8}, {n: 5, d: 8},
+          {n: 7, d: 8}, {n: 1, d: 9}, {n: 2, d: 9}, {n: 4, d: 9}, {n: 5, d: 9},
+          {n: 7, d: 9}, {n: 8, d: 9}, {n: 1, d: 11}, {n: 2, d: 11}, {n: 3, d: 11}
+        ];
+        let base = basePool3C[randInt(0, basePool3C.length - 1)];
+        let mult = [5, 10][randInt(0, 1)];
+        return {
+          type: 'fraction',
+          rule: "💡 <b>Fraction Rule (5 or 10):</b> If numbers end in 0 or 5, divide top & bottom by 5 or 10!",
+          prompt: "Simplify to lowest terms:",
+          origNum: base.n * mult,
+          origDen: base.d * mult,
+          ans: { num: base.n, den: base.d },
+          checkDivisor: mult
+        };
+      }
+
+      // --- LEVEL 4: DIVISIBILITY BY 25 ---
+      if (lvlIdx === 9) { // 4A
+        let num = randInt(10, 89) * 100 + [0, 25, 50, 75, 15, 35, 60, 85][randInt(0, 7)];
+        return {
+          type: 'yesno',
+          rule: "💡 <b>Divisibility Rule for 25:</b> Look at the <b>last two digits</b>. A number is divisible by 25 if it ends in <b>00, 25, 50, or 75</b>.<br><b>Example:</b> <code>1375</code> is divisible by 25 because its last two digits are 75.",
+          prompt: `Is <span style="font-size: 2.2rem; color: var(--gold);">${num}</span> divisible by 25?`,
+          ans: (num % 25 === 0)
+        };
+      }
+      if (lvlIdx === 10) { // 4B
+        let numbers = generateUniqueSet(4, n => n % 25 === 0, 100, 999);
+        return {
+          type: 'multiselect',
+          rule: "💡 <b>Mechanics Check:</b> Look for ending digits <b>00, 25, 50, or 75</b>.",
+          prompt: "Tap all numbers divisible by <b>25</b>:",
+          numbers: numbers,
+          ans: numbers.filter(n => n % 25 === 0)
+        };
+      }
+      if (lvlIdx === 11) { // 4C: Up to 200, divide by 25 ONCE
+        const valid25Bases = [
+          {n: 1, d: 2}, {n: 1, d: 3}, {n: 2, d: 3}, {n: 1, d: 4}, {n: 3, d: 4},
+          {n: 1, d: 5}, {n: 2, d: 5}, {n: 3, d: 5}, {n: 4, d: 5}, {n: 1, d: 6},
+          {n: 5, d: 6}, {n: 1, d: 7}, {n: 2, d: 7}, {n: 3, d: 7}, {n: 4, d: 7},
+          {n: 5, d: 7}, {n: 6, d: 7}, {n: 1, d: 8}, {n: 3, d: 8}, {n: 5, d: 8}, {n: 7, d: 8}
+        ];
+        let base = valid25Bases[randInt(0, valid25Bases.length - 1)];
+        let mult = 25;
+        return {
+          type: 'fraction',
+          rule: "💡 <b>Fraction Rule (25):</b> For numbers up to 200, divide numerator and denominator by 25 once!",
+          prompt: "Simplify to lowest terms:",
+          origNum: base.n * mult,
+          origDen: base.d * mult,
+          ans: { num: base.n, den: base.d },
+          checkDivisor: 25
+        };
+      }
+
+      // --- LEVEL 5: MIXED SINGLE SIMPLIFICATION ---
+      if (lvlIdx === 12) { // 5A
+        let div = [2, 3, 5, 10, 25][randInt(0, 4)];
+        let num = randInt(10, 99) * 10 + randInt(0, 9);
+        let ans = (num % div === 0);
+        return {
+          type: 'yesno',
+          rule: "💡 <b>Mixed Rule Challenge:</b> Apply your knowledge of 2, 3, 5, 10, and 25!",
+          prompt: `Is <span style="font-size: 2.2rem; color: var(--gold);">${num}</span> divisible by <b>${div}</b>?`,
+          ans: ans
+        };
+      }
+      if (lvlIdx === 13) { // 5B
+        let div = [2, 3, 5, 10, 25][randInt(0, 4)];
+        let numbers = generateUniqueSet(4, n => n % div === 0, 20, 300);
+        return {
+          type: 'multiselect',
+          rule: `💡 <b>Mixed Mechanics Check:</b> Scan all 4 numbers for divisibility by <b>${div}</b>.`,
+          prompt: `Tap all numbers divisible by <b>${div}</b>:`,
+          numbers: numbers,
+          ans: numbers.filter(n => n % div === 0)
+        };
+      }
+      if (lvlIdx === 14) { // 5C: Single simplification by 2, 3, 5, 10, or 25 ONCE
+        let div = [2, 3, 5, 10, 25][randInt(0, 4)];
+        const bases = [{n: 1, d: 2}, {n: 1, d: 3}, {n: 2, d: 3}, {n: 1, d: 4}, {n: 3, d: 4}, {n: 1, d: 7}, {n: 2, d: 7}, {n: 3, d: 7}, {n: 4, d: 7}, {n: 5, d: 7}];
+        
+        // Pick base coprime to div
+        let validBases = bases.filter(b => gcd(b.n, div) === 1 && gcd(b.d, div) === 1 && (b.d * div <= 250));
+        let base = validBases[randInt(0, validBases.length - 1)];
+
+        return {
+          type: 'fraction',
+          rule: `💡 <b>Single-Step Simplification:</b> Simplify by dividing numerator & denominator by <b>${div}</b> exactly once!`,
+          prompt: "Simplify to lowest terms:",
+          origNum: base.n * div,
+          origDen: base.d * div,
+          ans: { num: base.n, den: base.d },
+          checkDivisor: div
+        };
+      }
+
+      // --- LEVEL 6: DOUBLE / MULTI-STEP SIMPLIFICATION ---
+      if (lvlIdx === 15) { // 6A: Composite divisibility (e.g. 6 = 2 & 3, 100 = 10 & 10)
+        let types = [
+          { comp: 6, desc: "both 2 and 3" },
+          { comp: 100, desc: "100 (ends in 00)" }
+        ];
+        let t = types[randInt(0, 1)];
+        let num = randInt(10, 90) * 10 + [0, 6, 12, 18, 24, 30, 3, 7, 11][randInt(0, 8)];
+        let ans = (num % t.comp === 0);
+
+        return {
+          type: 'yesno',
+          rule: `💡 <b>Double Divisibility:</b> A number is divisible by <b>${t.comp}</b> if it is divisible by <b>${t.desc}</b>.`,
+          prompt: `Is <span style="font-size: 2.2rem; color: var(--gold);">${num}</span> divisible by <b>${t.comp}</b>?`,
+          ans: ans
+        };
+      }
+      if (lvlIdx === 16) { // 6B
+        let comp = [6, 100][randInt(0, 1)];
+        let numbers = generateUniqueSet(4, n => n % comp === 0, 100, 900);
+        return {
+          type: 'multiselect',
+          rule: `💡 <b>Composite Mechanics:</b> Select all numbers divisible by <b>${comp}</b>!`,
+          prompt: `Tap all numbers divisible by <b>${comp}</b>:`,
+          numbers: numbers,
+          ans: numbers.filter(n => n % comp === 0)
+        };
+      }
+      if (lvlIdx === 17) { // 6C: Double Reduction (e.g. 6/100 -> 3/50, 12/18 -> 2/3, 40/100 -> 2/5, 18/27 -> 2/3)
+        const doublePairs = [
+          { origN: 6, origD: 100, ansN: 3, ansD: 50 },
+          { origN: 12, origD: 18, ansN: 2, ansD: 3 },
+          { origN: 18, origD: 27, ansN: 2, ansD: 3 },
+          { origN: 40, origD: 100, ansN: 2, ansD: 5 },
+          { origN: 24, origD: 36, ansN: 2, ansD: 3 },
+          { origN: 16, origD: 24, ansN: 2, ansD: 3 },
+          { origN: 30, origD: 45, ansN: 2, ansD: 3 },
+          { origN: 20, origD: 100, ansN: 1, ansD: 5 },
+          { origN: 12, origD: 30, ansN: 2, ansD: 5 }
+        ];
+        let p = doublePairs[randInt(0, doublePairs.length - 1)];
+
+        return {
+          type: 'fraction',
+          rule: "💡 <b>Double Reduction:</b> These fractions require <b>2 steps of division</b> (or dividing by a composite factor like 6, 9, 20, 100) to reach lowest terms!",
+          prompt: "Simplify completely to lowest terms:",
+          origNum: p.origN,
+          origDen: p.origD,
+          ans: { num: p.ansN, den: p.ansD }
+        };
+      }
+    }
+
+    function generateUniqueSet(count, conditionFn, min = 10, max = 99) {
+      let nums = [];
+      let targetMatches = randInt(1, count - 1);
+      while(nums.length < count) {
+        let cand = randInt(min, max);
+        if (!nums.includes(cand)) {
+          let matches = conditionFn(cand);
+          if (matches && nums.filter(conditionFn).length < targetMatches) nums.push(cand);
+          else if (!matches && nums.filter(n => !conditionFn(n)).length < (count - targetMatches)) nums.push(cand);
+        }
+      }
+      return nums.sort(() => Math.random() - 0.5);
+    }
+
+    function renderMap() {
+      const container = document.getElementById('map-sections');
+      container.innerHTML = '';
+
+      let currentGroup = '';
+      let groupDiv = null;
+
+      subLevels.forEach((lvl, idx) => {
+        if (lvl.group !== currentGroup) {
+          currentGroup = lvl.group;
+          const sectionHeader = document.createElement('div');
+          sectionHeader.className = 'level-title';
+          sectionHeader.innerText = currentGroup;
+          
+          groupDiv = document.createElement('div');
+          groupDiv.className = 'grid-3';
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'level-section';
+          wrapper.appendChild(sectionHeader);
+          wrapper.appendChild(groupDiv);
+          container.appendChild(wrapper);
+        }
+
+        const isUnlocked = idx <= maxUnlocked;
+        const isCleared = completedSubLevels.includes(idx);
+        const node = document.createElement('div');
+        
+        let cls = 'star-node ';
+        if (isCleared) cls += 'cleared';
+        else if (isUnlocked) cls += 'unlocked';
+        else cls += 'locked';
+
+        node.className = cls;
+        node.innerHTML = `
+          <div class="star-icon">${isCleared ? '⭐' : (isUnlocked ? '🌟' : '🔒')}</div>
+          <div style="font-weight:bold; font-size:1.1rem;">Level ${lvl.id}</div>
+          <div style="font-weight:600; color:var(--accent); font-size:0.9rem; margin-top:2px;">${lvl.title}</div>
+          <div style="font-size:0.75rem; color: var(--text-muted); margin-top:4px;">${lvl.desc}</div>
+        `;
+
+        if (isUnlocked) node.onclick = () => startLevel(idx);
+        groupDiv.appendChild(node);
+      });
+    }
+
+    function showMap() {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('map-view').classList.add('active');
+      renderMap();
+    }
+
+    function startLevel(idx) {
+      currentLvlIdx = idx;
+      streak = 0;
+      updateTracker();
+      document.getElementById('lvl-badge').innerText = `Level ${subLevels[idx].id}`;
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('game-view').classList.add('active');
+      loadNextQuestion();
+    }
+
+    function updateTracker() {
+      for (let i = 1; i <= 5; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (i <= streak) dot.classList.add('active');
+        else dot.classList.remove('active');
+      }
+    }
+
+    function loadNextQuestion() {
+      document.getElementById('feedback-banner').innerHTML = '';
+      selectedCards = [];
+      stepChoice2A = null;
+      activeTapCard = null;
+      dropZoneState = { '5': [], 'both': [], 'neither': [] };
+
+      currentQ = buildQuestion(currentLvlIdx);
+
+      document.getElementById('rule-banner').innerHTML = currentQ.rule;
+
+      const qBox = document.getElementById('question-box');
+      let html = `<div>${currentQ.prompt}</div>`;
+      
+      if (currentQ.type === 'fraction') {
+        html += `
+          <div style="margin-top: 10px;">
+            <div class="display-fraction">
+              <span>${currentQ.origNum}</span>
+              <div class="bar"></div>
+              <span>${currentQ.origDen}</span>
+            </div>
+          </div>
+        `;
+      }
+      qBox.innerHTML = html;
+
+      const inputArea = document.getElementById('input-area');
+      inputArea.innerHTML = '';
+
+      if (currentQ.type === 'yesno') {
+        inputArea.innerHTML = `
+          <div class="choice-group">
+            <button class="btn-choice" onclick="checkYesNo(true)">Yes</button>
+            <button class="btn-choice" onclick="checkYesNo(false)">No</button>
+          </div>
+        `;
+      } else if (currentQ.type === 'twoStep2A') {
+        inputArea.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:12px; align-items:center; width:100%;">
+            <div><b>Step 1:</b> What is the sum of the digits?</div>
+            <input type="text" id="ans-sum" class="single-input" placeholder="Digit Sum" autocomplete="off">
+            <div style="margin-top:6px;"><b>Step 2:</b> Is ${currentQ.num} divisible by 3?</div>
+            <div class="choice-group">
+              <button class="btn-choice" id="btn-2a-yes" onclick="setStepChoice2A(true)">Yes</button>
+              <button class="btn-choice" id="btn-2a-no" onclick="setStepChoice2A(false)">No</button>
+            </div>
+            <button class="submit-btn" onclick="checkTwoStep2A()">Submit Answer</button>
+          </div>
+        `;
+        document.getElementById('ans-sum').focus();
+      } else if (currentQ.type === 'choice3') {
+        inputArea.innerHTML = `
+          <div class="choice-group">
+            <button class="btn-choice" onclick="checkChoice3('5')">Divisible by 5 ONLY</button>
+            <button class="btn-choice" onclick="checkChoice3('both')">Divisible by BOTH 5 & 10</button>
+            <button class="btn-choice" onclick="checkChoice3('neither')">Neither</button>
+          </div>
+        `;
+      } else if (currentQ.type === 'multiselect') {
+        let gridHtml = `<div class="cards-grid">`;
+        currentQ.numbers.forEach(num => {
+          gridHtml += `<div class="card-item" id="card-${num}" onclick="toggleCard(${num})">${num}</div>`;
+        });
+        gridHtml += `</div>`;
+        gridHtml += `<button class="submit-btn" onclick="checkMultiSelect()">Submit Answer</button>`;
+        inputArea.innerHTML = gridHtml;
+      } else if (currentQ.type === 'dragDrop3B') {
+        renderDragDrop3B(inputArea);
+      } else if (currentQ.type === 'fraction') {
+        inputArea.innerHTML = `
+          <div class="fraction-input">
+            <input type="text" id="ans-num" placeholder="Num" autocomplete="off">
+            <div class="fraction-bar"></div>
+            <input type="text" id="ans-den" placeholder="Den" autocomplete="off">
+          </div>
+          <button class="submit-btn" onclick="checkFraction()">Submit Fraction</button>
+        `;
+        document.getElementById('ans-num').focus();
+        inputArea.querySelectorAll('input').forEach(inp => {
+          inp.addEventListener('keypress', e => { if (e.key === 'Enter') checkFraction(); });
+        });
+      }
+    }
+
+    /* --- LEVEL 3B DRAG AND DROP RENDER & LOGIC --- */
+    function renderDragDrop3B(container) {
+      let poolHtml = `<div class="drag-cards-pool" id="cards-pool">`;
+      currentQ.numbers.forEach(num => {
+        let isPlaced = Object.values(dropZoneState).some(arr => arr.includes(num));
+        if (!isPlaced) {
+          poolHtml += `
+            <div class="drag-card-item" id="dcard-${num}" draggable="true" 
+                 ondragstart="dragStart(event, ${num})" onclick="handleCardTap(${num})">
+              ${num}
+            </div>`;
+        }
+      });
+      poolHtml += `</div>`;
+
+      let zonesHtml = `<div class="drop-zones-container">`;
+      const zones = [
+        { id: '5', label: '🟢 Divisible by 5 ONLY' },
+        { id: 'both', label: '🔵 BOTH 5 & 10' },
+        { id: 'neither', label: '🟡 Neither' }
+      ];
+
+      zones.forEach(z => {
+        zonesHtml += `
+          <div class="drop-zone" id="zone-${z.id}" 
+               ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="drop(event, '${z.id}')" onclick="handleZoneTap('${z.id}')">
+            <div class="drop-zone-title">${z.label}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:100%;">
+        `;
+        dropZoneState[z.id].forEach(num => {
+          zonesHtml += `
+            <div class="drag-card-item" onclick="event.stopPropagation(); removeCardFromZone(${num}, '${z.id}')">
+              ${num} ✕
+            </div>`;
+        });
+        zonesHtml += `</div></div>`;
+      });
+      zonesHtml += `</div>`;
+      zonesHtml += `<button class="submit-btn" onclick="checkDragDrop3B()">Submit Categories</button>`;
+
+      container.innerHTML = poolHtml + zonesHtml;
+    }
+
+    function dragStart(e, num) {
+      e.dataTransfer.setData("text/plain", num);
+    }
+    function allowDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+    function dragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+    function drop(e, zoneId) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      let num = parseInt(e.dataTransfer.getData("text/plain"));
+      placeCardInZone(num, zoneId);
+    }
+
+    function handleCardTap(num) {
+      activeTapCard = (activeTapCard === num) ? null : num;
+      currentQ.numbers.forEach(n => {
+        const el = document.getElementById(`dcard-${n}`);
+        if (el) el.classList.toggle('active-tap', n === activeTapCard);
+      });
+    }
+
+    function handleZoneTap(zoneId) {
+      if (activeTapCard !== null) {
+        placeCardInZone(activeTapCard, zoneId);
+        activeTapCard = null;
+      }
+    }
+
+    function placeCardInZone(num, targetZone) {
+      // Remove from any existing zone first
+      Object.keys(dropZoneState).forEach(z => {
+        dropZoneState[z] = dropZoneState[z].filter(n => n !== num);
+      });
+      dropZoneState[targetZone].push(num);
+      renderDragDrop3B(document.getElementById('input-area'));
+    }
+
+    function removeCardFromZone(num, zoneId) {
+      dropZoneState[zoneId] = dropZoneState[zoneId].filter(n => n !== num);
+      renderDragDrop3B(document.getElementById('input-area'));
+    }
+
+    /* --- CHECK ANSWERS --- */
+    function setStepChoice2A(val) {
+      stepChoice2A = val;
+      document.getElementById('btn-2a-yes').classList.toggle('active', val === true);
+      document.getElementById('btn-2a-no').classList.toggle('active', val === false);
+    }
+
+    function toggleCard(num) {
+      const card = document.getElementById(`card-${num}`);
+      if (selectedCards.includes(num)) {
+        selectedCards = selectedCards.filter(n => n !== num);
+        card.classList.remove('selected');
+      } else {
+        selectedCards.push(num);
+        card.classList.add('selected');
+      }
+    }
+
+    function checkYesNo(userChoice) {
+      let isCorrect = (userChoice === currentQ.ans);
+      let msg = isCorrect ? 'Correct! ✓' : `Incorrect! ✗ Re-check the rule.`;
+      handleResult(isCorrect, msg);
+    }
+
+    function checkTwoStep2A() {
+      let sumVal = parseInt(document.getElementById('ans-sum').value.trim());
+      if (isNaN(sumVal) || stepChoice2A === null) {
+        document.getElementById('feedback-banner').innerHTML = '<span class="txt-incorrect">Please enter the digit sum AND select Yes/No.</span>';
+        return;
+      }
+
+      let sumCorrect = (sumVal === currentQ.ansSum);
+      let divCorrect = (stepChoice2A === currentQ.ansDivisible);
+
+      if (sumCorrect && divCorrect) {
+        handleResult(true, `Correct! ✓ Sum of digits is ${currentQ.ansSum}, so ${currentQ.num} is ${currentQ.ansDivisible ? '' : 'NOT '}divisible by 3.`);
+      } else if (!sumCorrect) {
+        handleResult(false, `Incorrect! ✗ Sum of digits for ${currentQ.num} is ${currentQ.ansSum}.`);
+      } else {
+        handleResult(false, `Incorrect! ✗ Since digit sum is ${currentQ.ansSum}, it is ${currentQ.ansDivisible ? '' : 'NOT '}divisible by 3.`);
+      }
+    }
+
+    function checkChoice3(userChoice) {
+      let isCorrect = (userChoice === currentQ.ans);
+      let msg = isCorrect ? 'Correct! ✓' : `Incorrect! ✗ Check the ending digit again.`;
+      handleResult(isCorrect, msg);
+    }
+
+    function checkMultiSelect() {
+      const targetNums = [...currentQ.ans].sort((a,b) => a-b);
+      const userNums = [...selectedCards].sort((a,b) => a-b);
+      let isCorrect = JSON.stringify(targetNums) === JSON.stringify(userNums);
+
+      let msg = isCorrect ? 'Correct! ✓' : `Incorrect! ✗ Re-check each number carefully.`;
+      handleResult(isCorrect, msg);
+    }
+
+    function checkDragDrop3B() {
+      let totalPlaced = Object.values(dropZoneState).reduce((acc, arr) => acc + arr.length, 0);
+      if (totalPlaced < 4) {
+        document.getElementById('feedback-banner').innerHTML = '<span class="txt-incorrect">Please place all 4 cards into drop zones!</span>';
+        return;
+      }
+
+      let isCorrect = true;
+      Object.keys(dropZoneState).forEach(zone => {
+        dropZoneState[zone].forEach(num => {
+          if (currentQ.ansMap[num] !== zone) isCorrect = false;
+        });
+      });
+
+      let msg = isCorrect ? 'Correct! ✓ All 4 numbers placed in their correct drop zones!' : 'Incorrect! ✗ Check ending digits again (5 ONLY vs 0 vs Neither).';
+      handleResult(isCorrect, msg);
+    }
+
+    function checkFraction() {
+      const numVal = parseInt(document.getElementById('ans-num').value.trim());
+      const denVal = parseInt(document.getElementById('ans-den').value.trim());
+
+      if (isNaN(numVal) || isNaN(denVal)) {
+        document.getElementById('feedback-banner').innerHTML = '<span class="txt-incorrect">Please enter numbers for both numerator and denominator.</span>';
+        return;
+      }
+
+      let isFullySimplified = (numVal === currentQ.ans.num && denVal === currentQ.ans.den);
+      let isEquivalent = (numVal * currentQ.origDen === denVal * currentQ.origNum);
+
+      if (isFullySimplified) {
+        handleResult(true, 'Correct! ✓ Completely simplified to lowest terms!');
+      } else if (isEquivalent) {
+        handleResult(false, `Good start! But ${numVal}/${denVal} can still be simplified further!`);
+      } else {
+        handleResult(false, `Incorrect! ✗ Try dividing numerator & denominator carefully.`);
+      }
+    }
+
+    function handleResult(isCorrect, msg) {
+      const banner = document.getElementById('feedback-banner');
+
+      if (isCorrect) {
+        streak++;
+        updateTracker();
+        banner.innerHTML = `<span class="txt-correct">${msg}</span>`;
+
+        setTimeout(() => {
+          if (streak === 5) {
+            if (!completedSubLevels.includes(currentLvlIdx)) completedSubLevels.push(currentLvlIdx);
+            if (currentLvlIdx === maxUnlocked && maxUnlocked < subLevels.length - 1) maxUnlocked++;
+            banner.innerHTML = '<span class="txt-correct">Sub-Level Cleared! ⭐</span>';
+            setTimeout(showMap, 1200);
+          } else {
+            loadNextQuestion();
+          }
+        }, 800);
+      } else {
+        streak = 0;
+        updateTracker();
+        banner.innerHTML = `<span class="txt-incorrect">${msg} Generating a new question...</span>`;
+
+        setTimeout(() => {
+          loadNextQuestion();
+        }, 1800);
+      }
+    }
+
+    renderMap();
+  </script>
+</body>
+</html>
