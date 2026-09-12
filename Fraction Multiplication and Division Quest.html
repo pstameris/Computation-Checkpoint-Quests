@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fraction Multiplication and Division Quest</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --accent: #38bdf8;
+      --gold: #facc15;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; overflow-x: hidden; }
+
+    header { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 2px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    h1 { font-size: 1.4rem; color: var(--accent); }
+    .header-btns { display: flex; gap: 10px; }
+    .nav-btn { background: var(--border); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .nav-btn:hover { background: #475569; }
+    .save-btn { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid var(--success); }
+    .save-btn:hover { background: var(--success); color: #0f172a; }
+    .reset-btn { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid var(--danger); }
+    .reset-btn:hover { background: var(--danger); color: white; }
+
+    .container { width: 100%; max-width: 900px; }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Map View */
+    .level-section { margin-bottom: 25px; }
+    .level-title { font-size: 1.2rem; font-weight: bold; color: var(--gold); margin-bottom: 10px; border-left: 4px solid var(--gold); padding-left: 10px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+    
+    .star-node { background: var(--card-bg); border: 2px solid var(--border); border-radius: 14px; padding: 16px 12px; text-align: center; transition: all 0.2s; user-select: none; }
+    .star-node.locked { opacity: 0.45; cursor: not-allowed; filter: grayscale(80%); }
+    .star-node.unlocked { border-color: var(--accent); cursor: pointer; }
+    .star-node.unlocked:hover { border-color: var(--gold); transform: translateY(-3px); }
+    .star-node.cleared { border-color: var(--success); background: rgba(34, 197, 94, 0.1); cursor: pointer; }
+    .star-node.cleared:hover { transform: translateY(-2px); }
+    .star-icon { font-size: 1.8rem; margin-bottom: 4px; }
+    .node-id { font-weight: bold; color: var(--accent); font-size: 1.1rem; }
+    .node-title { font-size: 0.95rem; font-weight: 600; margin: 4px 0; }
+    .node-desc { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* Game View */
+    .game-card { background: var(--card-bg); border-radius: 20px; padding: 30px 20px; border: 1px solid var(--border); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    .level-badge { background: var(--border); color: var(--accent); padding: 6px 16px; border-radius: 20px; font-weight: 700; display: inline-block; margin-bottom: 15px; }
+
+    .rule-banner { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 14px 18px; border-radius: 12px; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.5; text-align: left; }
+    .rules-list { margin-top: 6px; padding-left: 18px; }
+    .rules-list li { margin-bottom: 4px; }
+
+    /* Tracker (5 Dots) */
+    .tracker { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .dot { width: 30px; height: 30px; border-radius: 50%; background: #475569; transition: all 0.3s; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: var(--bg); font-weight: bold; }
+    .dot.active { background: var(--gold); box-shadow: 0 0 10px var(--gold); color: #000; }
+
+    .question-box { font-size: 1.3rem; font-weight: bold; margin: 15px 0 20px 0; min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
+
+    /* Single Line Question Text */
+    .single-line-q { display: inline-flex; align-items: center; justify-content: center; gap: 10px; white-space: nowrap; font-size: 1.4rem; flex-wrap: nowrap; }
+
+    /* Fraction Display and Input */
+    .display-fraction { display: inline-flex; flex-direction: column; align-items: center; font-size: 1.6rem; font-weight: bold; vertical-align: middle; margin: 0 6px; }
+    .display-fraction .bar { width: 100%; height: 3px; background-color: var(--text); margin: 3px 0; }
+    
+    .display-mixed { display: inline-flex; align-items: center; gap: 6px; font-size: 1.8rem; font-weight: bold; vertical-align: middle; margin: 0 8px; }
+
+    .fraction-input { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; vertical-align: middle; }
+    .fraction-input input { width: 68px; height: 42px; text-align: center; font-size: 1.3rem; font-weight: bold; border: 2px solid var(--accent); border-radius: 8px; background: #0f172a; color: #fff; outline: none; }
+    .fraction-input input:focus { border-color: var(--gold); }
+    .fraction-bar { width: 70px; height: 3px; background-color: var(--text); border-radius: 2px; }
+
+    .single-input { width: 100px; height: 44px; padding: 5px; font-size: 1.3rem; font-weight: bold; text-align: center; background: #0f172a; color: #fff; border: 2px solid var(--accent); border-radius: 8px; outline: none; }
+    .single-input:focus { border-color: var(--gold); }
+
+    .input-area { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; margin-top: 10px; }
+    .eqn-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .step-title { font-size: 1.05rem; font-weight: 600; color: var(--gold); margin-top: 8px; }
+
+    .choice-group { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; width: 100%; max-width: 400px; }
+    .btn-choice { flex: 1; min-width: 120px; padding: 12px 16px; font-size: 1.1rem; font-weight: bold; border-radius: 12px; border: 2px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; transition: 0.2s; }
+    .btn-choice:hover { border-color: var(--accent); background: #1e293b; }
+
+    .submit-btn { background: var(--accent); color: #0f172a; border: none; padding: 12px 32px; font-size: 1.1rem; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+    .submit-btn:hover { background: #7dd3fc; transform: translateY(-2px); }
+
+    .feedback-banner { min-height: 45px; font-size: 1.1rem; font-weight: bold; margin-top: 20px; line-height: 1.4; }
+    .txt-correct { color: var(--success); }
+    .txt-incorrect { color: var(--danger); }
+
+    /* Canvas Confetti Overlay */
+    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 999; }
+
+    /* Modal Styling */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-card { background: var(--card-bg); border: 3px solid var(--gold); border-radius: 20px; padding: 30px 24px; max-width: 480px; width: 90%; text-align: center; box-shadow: 0 0 30px rgba(250, 204, 21, 0.4); transform: scale(0.8); transition: transform 0.3s ease; }
+    .modal-overlay.active .modal-card { transform: scale(1); }
+    .modal-icon { font-size: 3.5rem; margin-bottom: 10px; animation: bounce 1s infinite alternate; }
+    .modal-title { font-size: 1.6rem; color: var(--gold); font-weight: bold; margin-bottom: 10px; }
+    .modal-body { font-size: 1.1rem; color: var(--text); line-height: 1.5; margin-bottom: 20px; }
+    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+  </style>
+</head>
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <header>
+    <h1>⭐ Fraction Multiplication and Division Quest</h1>
+    <div class="header-btns">
+      <button class="nav-btn save-btn" onclick="saveProgressManually()">💾 Save Progress</button>
+      <button class="nav-btn reset-btn" onclick="resetProgressWithWarning()">Reset Progress</button>
+      <button class="nav-btn" onclick="showMap()">Level Map</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- MAP SCREEN -->
+    <div id="map-view" class="view active">
+      <h2 style="text-align: center; margin-bottom: 4px;">Skill Progression Map</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">Complete each level with a 5-in-a-row streak to unlock the next challenge!</p>
+      <div id="map-sections"></div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-view" class="view">
+      <div class="game-card">
+        <div id="lvl-badge" class="level-badge">Level 1A</div>
+        
+        <div id="rule-banner" class="rule-banner"></div>
+
+        <div class="tracker">
+          <div id="dot-1" class="dot">1</div>
+          <div id="dot-2" class="dot">2</div>
+          <div id="dot-3" class="dot">3</div>
+          <div id="dot-4" class="dot">4</div>
+          <div id="dot-5" class="dot">5</div>
+        </div>
+
+        <div id="question-box" class="question-box"></div>
+        <div id="input-area" class="input-area"></div>
+
+        <div id="feedback-banner" class="feedback-banner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACKNOWLEDGMENT MODAL -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal-card">
+      <div id="modal-icon" class="modal-icon">🏆</div>
+      <div id="modal-title" class="modal-title">Level Mastered!</div>
+      <div id="modal-body" class="modal-body">Great job completing this level!</div>
+      <button class="submit-btn" onclick="closeModal()">Continue</button>
+    </div>
+  </div>
+
+  <script>
+    const subLevels = [
+      { id: '1A', group: 'Level 1: Divisibility & Simplifying', title: 'Divisibility Rules (2, 5, 10, 11)', desc: 'Test divisibility rules for 2, 5, 10, and 11 (up to 99).' },
+      { id: '1B', group: 'Level 1: Divisibility & Simplifying', title: 'Divisibility by 3', desc: 'Find digit sum first, then test divisibility by 3.' },
+      { id: '1C', group: 'Level 1: Divisibility & Simplifying', title: 'Simplify Fractions (Includes 11s)', desc: 'Simplify fractions to lowest terms (improper allowed).' },
+
+      { id: '2A', group: 'Level 2: Multiplying Simple Fractions', title: 'Simple Multiplication', desc: 'Multiply numerators and denominators (No canceling).' },
+      { id: '2B', group: 'Level 2: Multiplying Simple Fractions', title: 'Cross Cancel 1 Diagonal & Rewrite', desc: 'Rewrite all 4 simplified values first, then multiply.' },
+      { id: '2C', group: 'Level 2: Multiplying Simple Fractions', title: 'Cross Cancel Both Diagonals & Rewrite', desc: 'Cross-cancel both diagonals, rewrite 4 values, then multiply.' },
+
+      { id: '3A', group: 'Level 3: Multiplying Mixed Numbers', title: 'Mixed to Improper', desc: 'Convert irreducible mixed numbers to improper fractions.' },
+      { id: '3B', group: 'Level 3: Multiplying Mixed Numbers', title: 'Multiply Mixed (No Cancelling)', desc: 'Convert to improper, rewrite all 4 values, then multiply.' },
+      { id: '3C', group: 'Level 3: Multiplying Mixed Numbers', title: 'Multiply Mixed (3-Step Process)', desc: 'Step 1: Improper, Step 2: Cross Cancel, Step 3: Multiply.' },
+
+      { id: '4A', group: 'Level 4: Dividing Fractions', title: 'Keep, Change, Flip', desc: 'Rewrite division as multiplication of 4 values, then multiply.' },
+      { id: '4B', group: 'Level 4: Dividing Fractions', title: 'Divide Mixed Numbers (3-Step Process)', desc: 'Step 1: Improper, Step 2: Keep Change Flip, Step 3: Multiply.' },
+      { id: '4C', group: 'Level 4: Dividing Fractions', title: 'Divide Mixed with Simplifying (4-Step Process)', desc: 'Step 1: Improper, Step 2: KCF, Step 3: Simplify, Step 4: Multiply.' }
+    ];
+
+    let completedSubLevels = [];
+    let currentLvlIdx = 0;
+    let streak = 0;
+    let currentQ = null;
+    let lastGeneratedKey = '';
+
+    function saveProgress() {
+      localStorage.setItem('fractionQuest_completed', JSON.stringify(completedSubLevels));
+    }
+
+    function saveProgressManually() {
+      saveProgress();
+      alert("💾 Progress saved successfully!");
+    }
+
+    function loadProgress() {
+      const saved = localStorage.getItem('fractionQuest_completed');
+      if (saved) {
+        try { completedSubLevels = JSON.parse(saved); } catch (e) { completedSubLevels = []; }
+      }
+    }
+
+    function resetProgressWithWarning() {
+      if (confirm("⚠️ RESET ALL COMPLETED STAGES?\n\nAre you sure you want to clear your stage completions and start fresh?")) {
+        completedSubLevels = [];
+        streak = 0;
+        localStorage.removeItem('fractionQuest_completed');
+        showMap();
+      }
+    }
+
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+    function renderFraction(n, d) {
+      return `<div class="display-fraction"><span>${n}</span><div class="bar"></div><span>${d}</span></div>`;
+    }
+
+    function renderMixed(w, n, d) {
+      return `<div class="display-mixed"><span>${w}</span>${renderFraction(n, d)}</div>`;
+    }
+
+    function renderFractionInput(numId='inp-num', denId='inp-den') {
+      return `
+        <div class="fraction-input">
+          <input type="number" id="${numId}" placeholder="Num">
+          <div class="fraction-bar"></div>
+          <input type="number" id="${denId}" placeholder="Den">
+        </div>
+      `;
+    }
+
+    function triggerConfetti(duration = 2500) {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#facc15', '#38bdf8', '#22c55e', '#ef4444', '#a855f7', '#ec4899'];
+
+      for (let i = 0; i < 90; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height * 0.5,
+          vx: (Math.random() - 0.5) * 6,
+          vy: Math.random() * 5 + 3,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 8
+        });
+      }
+
+      const startTime = Date.now();
+      function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rotation += p.rotSpeed;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+
+        if (Date.now() - startTime < duration) {
+          requestAnimationFrame(update);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      update();
+    }
+
+    function showModal(title, body, icon = "🏆") {
+      document.getElementById('modal-icon').innerText = icon;
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-body').innerText = body;
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('active');
+      showMap();
+    }
+
+    function renderMap() {
+      const container = document.getElementById('map-sections');
+      container.innerHTML = '';
+
+      let currentGroup = '';
+      let groupDiv = null;
+
+      subLevels.forEach((lvl, idx) => {
+        if (lvl.group !== currentGroup) {
+          currentGroup = lvl.group;
+          const sectionHeader = document.createElement('div');
+          sectionHeader.className = 'level-title';
+          sectionHeader.innerText = currentGroup;
+          
+          groupDiv = document.createElement('div');
+          groupDiv.className = 'grid-3';
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'level-section';
+          wrapper.appendChild(sectionHeader);
+          wrapper.appendChild(groupDiv);
+          container.appendChild(wrapper);
+        }
+
+        const isCleared = completedSubLevels.includes(lvl.id);
+        const isUnlocked = idx === 0 || completedSubLevels.includes(subLevels[idx - 1].id);
+
+        let statusClass = 'locked';
+        let icon = '🔒';
+
+        if (isCleared) {
+          statusClass = 'cleared';
+          icon = '⭐';
+        } else if (isUnlocked) {
+          statusClass = 'unlocked';
+          icon = '🎯';
+        }
+
+        const node = document.createElement('div');
+        node.className = `star-node ${statusClass}`;
+
+        node.innerHTML = `
+          <div class="star-icon">${icon}</div>
+          <div class="node-id">${lvl.id}</div>
+          <div class="node-title">${lvl.title}</div>
+          <div class="node-desc">${lvl.desc}</div>
+        `;
+
+        if (isUnlocked || isCleared) {
+          node.onclick = () => startLevel(idx);
+        }
+        groupDiv.appendChild(node);
+      });
+    }
+
+    function showMap() {
+      document.getElementById('map-view').classList.add('active');
+      document.getElementById('game-view').classList.remove('active');
+      renderMap();
+    }
+
+    function startLevel(idx) {
+      currentLvlIdx = idx;
+      streak = 0;
+      lastGeneratedKey = '';
+      document.getElementById('map-view').classList.remove('active');
+      document.getElementById('game-view').classList.add('active');
+      updateStreakTracker();
+      nextQuestion();
+    }
+
+    function updateStreakTracker() {
+      for (let i = 1; i <= 5; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (i <= streak) dot.classList.add('active');
+        else dot.classList.remove('active');
+      }
+    }
+
+    function buildQuestion(lvlIdx) {
+      if (lvlIdx === 0) {
+        const divList = [2, 5, 10, 11];
+        const d = divList[randInt(0, 3)];
+        const isDiv = Math.random() < 0.5;
+        let num;
+
+        if (d === 11) {
+          if (isDiv) num = [11, 22, 33, 44, 55, 66, 77, 88, 99][randInt(0, 8)];
+          else { num = randInt(10, 99); while (num % 11 === 0) num = randInt(10, 99); }
+        } else {
+          if (isDiv) num = randInt(5, 80) * d;
+          else { num = randInt(20, 500); if (num % d === 0) num += randInt(1, d - 1); }
+        }
+
+        return {
+          type: 'yesno',
+          rule: `<b>💡 Divisibility Rules Reference:</b><ul class="rules-list"><li><b>2:</b> Ends in an even digit (0, 2, 4, 6, 8).</li><li><b>5:</b> Ends in 0 or 5.</li><li><b>10:</b> Ends in 0.</li><li><b>11 (to 99):</b> Both digits are identical (e.g., 11, 22... 99).</li></ul>`,
+          prompt: `<div class="single-line-q">Is <span style="font-size: 2rem; color: var(--gold);">${num}</span> divisible by <b>${d}</b>?</div>`,
+          ans: (num % d === 0)
+        };
+      }
+
+      if (lvlIdx === 1) {
+        const num = randInt(100, 999);
+        const dSum = String(num).split('').reduce((s, digit) => s + parseInt(digit), 0);
+        return {
+          type: 'twoStep3',
+          rule: "💡 <b>Rule for 3:</b> Add all digits together. If the digit sum is divisible by 3, the whole number is divisible by 3!",
+          prompt: `Check divisibility for <span style="font-size: 2rem; color: var(--gold);">${num}</span>:`,
+          num: num,
+          ansSum: dSum,
+          ansDivisible: (dSum % 3 === 0)
+        };
+      }
+
+      if (lvlIdx === 2) {
+        let n, d, g, key;
+        const useEleven = Math.random() < 0.4;
+        do {
+          g = useEleven ? 11 : [2, 3, 4, 5, 6, 7, 8, 9, 10][randInt(0, 8)];
+          let simpleN = randInt(1, 8), simpleD = randInt(2, 9);
+          while (gcd(simpleN, simpleD) !== 1) simpleD++;
+          n = simpleN * g; d = simpleD * g;
+          key = `${n}/${d}`;
+        } while (key === lastGeneratedKey);
+        lastGeneratedKey = key;
+
+        return {
+          type: 'fractionInput',
+          rule: "💡 <b>Simplifying Fractions:</b> Divide top and bottom by their greatest common factor.",
+          prompt: "Simplify to lowest terms:",
+          dispNum: n, dispDen: d,
+          ansNum: n / g, ansDen: d / g
+        };
+      }
+
+      if (lvlIdx === 3) {
+        let n1, d1, n2, d2, key;
+        do {
+          n1 = randInt(2, 7); d1 = randInt(2, 9);
+          n2 = randInt(2, 7); d2 = randInt(2, 9);
+          key = `${n1}/${d1}x${n2}/${d2}`;
+        } while (gcd(n1, d1) !== 1 || gcd(n2, d2) !== 1 || gcd(n1, d2) !== 1 || gcd(n2, d1) !== 1 || key === lastGeneratedKey);
+        lastGeneratedKey = key;
+
+        return {
+          type: 'fractionInput',
+          rule: "💡 <b>Multiplying Simple Fractions:</b> Multiply top × top and bottom × bottom directly.",
+          prompt: "Multiply across:",
+          eqnHTML: `${renderFraction(n1, d1)} <span>×</span> ${renderFraction(n2, d2)}`,
+          ansNum: n1 * n2, ansDen: d1 * d2
+        };
+      }
+
+      if (lvlIdx === 4 || lvlIdx === 5) {
+        const validFactors = [2, 3, 4, 5, 6, 9, 10, 11];
+        let a = randInt(1, 7), b = randInt(2, 7), c = randInt(1, 7), d = randInt(2, 7);
+        let f1 = validFactors[randInt(0, validFactors.length - 1)];
+        let f2 = (lvlIdx === 4) ? 1 : validFactors[randInt(0, validFactors.length - 1)];
+        let n1 = a * f1, d1 = b * f2, n2 = c * f2, d2 = d * f1;
+
+        return {
+          type: 'rewrite4',
+          rule: "💡 <b>Cross Cancel:</b> Simplify diagonal pairs, rewrite all 4 values, then multiply!",
+          f1: {n: n1, d: d1}, f2: {n: n2, d: d2},
+          rwN1: a, rwD1: b, rwN2: c, rwD2: d,
+          ansNum: a * c, ansDen: b * d
+        };
+      }
+
+      if (lvlIdx === 6) {
+        let w = randInt(1, 5), d = [2, 3, 4, 5, 7, 8, 9, 11][randInt(0, 7)], n = randInt(1, d - 1);
+        while (gcd(n, d) !== 1) n = randInt(1, d - 1);
+        return {
+          type: 'fractionInput',
+          rule: "💡 <b>Mixed to Improper:</b> (Whole × Denominator) + Numerator = New Numerator.",
+          prompt: "Convert to improper fraction:",
+          eqnHTML: `${renderMixed(w, n, d)}`,
+          ansNum: w * d + n, ansDen: d
+        };
+      }
+
+      if (lvlIdx === 7) {
+        let w1 = randInt(1, 3), d1 = randInt(2, 5), n1 = randInt(1, d1 - 1);
+        let w2 = randInt(1, 3), d2 = randInt(2, 5), n2 = randInt(1, d2 - 1);
+        let N1 = w1 * d1 + n1, N2 = w2 * d2 + n2;
+        return {
+          type: 'rewrite4Mixed',
+          rule: "💡 <b>Multiply Mixed Numbers:</b> Convert both to improper fractions first, then multiply across!",
+          m1: {w: w1, n: n1, d: d1}, m2: {w: w2, n: n2, d: d2},
+          rwN1: N1, rwD1: d1, rwN2: N2, rwD2: d2,
+          ansNum: N1 * N2, ansDen: d1 * d2
+        };
+      }
+
+      if (lvlIdx === 8) {
+        const p = { m1:{w:1,n:2,d:3}, m2:{w:1,n:7,d:8}, impN1:5, impD1:3, impN2:15, impD2:8, simN1:5, simD1:1, simN2:5, simD2:8, ansN:25, ansD:8 };
+        return {
+          type: 'threeStepMixed',
+          rule: "💡 <b>3-Step Mixed Multiplication:</b><br>1. Convert to improper.<br>2. Cross-cancel.<br>3. Multiply across.",
+          m1: p.m1, m2: p.m2,
+          impN1: p.impN1, impD1: p.impD1, impN2: p.impN2, impD2: p.impD2,
+          simN1: p.simN1, simD1: p.simD1, simN2: p.simN2, simD2: p.simD2,
+          ansNum: p.ansN, ansDen: p.ansD
+        };
+      }
+
+      if (lvlIdx === 9) {
+        let n1 = randInt(2, 5), d1 = randInt(3, 7), n2 = randInt(2, 5), d2 = randInt(3, 7);
+        return {
+          type: 'rewrite4Division',
+          rule: "💡 <b>Keep, Change, Flip:</b> Turn ÷ into × and flip the 2nd fraction!",
+          f1: {n: n1, d: d1}, f2: {n: n2, d: d2},
+          rwN1: n1, rwD1: d1, rwN2: d2, rwD2: n2,
+          ansNum: n1 * d2, ansDen: d1 * n2
+        };
+      }
+
+      if (lvlIdx === 10) {
+        let w1 = 1, n1 = 1, d1 = 2, w2 = 1, n2 = 1, d2 = 4;
+        let N1 = 3, D1 = 2, N2 = 5, D2 = 4;
+        return {
+          type: 'threeStepMixedDiv4B',
+          rule: "💡 <b>Divide Mixed Numbers (3 Steps):</b><br>1. Improper fractions.<br>2. Keep Change Flip.<br>3. Multiply across.",
+          m1: {w: w1, n: n1, d: d1}, m2: {w: w2, n: n2, d: d2},
+          impN1: N1, impD1: D1, impN2: N2, impD2: D2,
+          kcfN1: N1, kcfD1: D1, kcfN2: D2, kcfD2: N2,
+          ansNum: N1 * D2, ansDen: D1 * N2
+        };
+      }
+
+      if (lvlIdx === 11) {
+        const p = { m1:{w:1,n:2,d:5}, m2:{w:1,n:1,d:15}, impN1:7, impD1:5, impN2:16, impD2:15, kcfN1:7, kcfD1:5, kcfN2:15, kcfD2:16, simN1:7, simD1:1, simN2:3, simD2:16, ansN:21, ansD:16 };
+        return {
+          type: 'fourStepMixedDiv4C',
+          rule: "💡 <b>Divide Mixed Numbers (4 Steps):</b><br>1. Improper.<br>2. Keep Change Flip.<br>3. Cross-cancel.<br>4. Multiply across.",
+          m1: p.m1, m2: p.m2,
+          impN1: p.impN1, impD1: p.impD1, impN2: p.impN2, impD2: p.impD2,
+          kcfN1: p.kcfN1, kcfD1: p.kcfD1, kcfN2: p.kcfN2, kcfD2: p.kcfD2,
+          simN1: p.simN1, simD1: p.simD1, simN2: p.simN2, simD2: p.simD2,
+          ansNum: p.ansN, ansDen: p.ansD
+        };
+      }
+    }
+
+    function nextQuestion() {
+      document.getElementById('feedback-banner').innerHTML = '';
+      const lvl = subLevels[currentLvlIdx];
+      document.getElementById('lvl-badge').innerText = `Level ${lvl.id}: ${lvl.title}`;
+      
+      currentQ = buildQuestion(currentLvlIdx);
+      document.getElementById('rule-banner').innerHTML = currentQ.rule;
+
+      const qBox = document.getElementById('question-box');
+      const inArea = document.getElementById('input-area');
+      qBox.innerHTML = '';
+      inArea.innerHTML = '';
+
+      if (currentQ.type === 'yesno') {
+        qBox.innerHTML = currentQ.prompt;
+        inArea.innerHTML = `
+          <div class="choice-group">
+            <button class="btn-choice" onclick="checkAnswer(true)">Yes</button>
+            <button class="btn-choice" onclick="checkAnswer(false)">No</button>
+          </div>
+        `;
+      } else if (currentQ.type === 'twoStep3') {
+        qBox.innerHTML = currentQ.prompt;
+        inArea.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:12px; align-items:center;">
+            <div>Digit Sum = <input type="number" id="inp-sum" class="single-input" placeholder="Sum"></div>
+            <div>Is it divisible by 3?</div>
+            <div class="choice-group">
+              <button class="btn-choice" onclick="checkTwoStep3(true)">Yes</button>
+              <button class="btn-choice" onclick="checkTwoStep3(false)">No</button>
+            </div>
+          </div>
+        `;
+      } else if (currentQ.type === 'fractionInput') {
+        qBox.innerHTML = `<div>${currentQ.prompt}</div>` + (currentQ.eqnHTML ? `<div style="margin-top:10px">${currentQ.eqnHTML}</div>` : `<div style="margin-top:10px">${renderFraction(currentQ.dispNum, currentQ.dispDen)}</div>`);
+        inArea.innerHTML = `${renderFractionInput('inp-num', 'inp-den')}<button class="submit-btn" onclick="checkFractionInput()">Submit Answer</button>`;
+      } else if (currentQ.type === 'rewrite4' || currentQ.type === 'rewrite4Mixed' || currentQ.type === 'rewrite4Division') {
+        let eqStr = currentQ.type === 'rewrite4Division' ? '÷' : '×';
+        let disp = currentQ.type === 'rewrite4Mixed' 
+          ? `${renderMixed(currentQ.m1.w, currentQ.m1.n, currentQ.m1.d)} <span>${eqStr}</span> ${renderMixed(currentQ.m2.w, currentQ.m2.n, currentQ.m2.d)}`
+          : `${renderFraction(currentQ.f1.n, currentQ.f1.d)} <span>${eqStr}</span> ${renderFraction(currentQ.f2.n, currentQ.f2.d)}`;
+        qBox.innerHTML = `<div style="display:flex; align-items:center; gap:8px;">${disp}</div>`;
+        inArea.innerHTML = `
+          <div class="step-title">Step 1: Rewrite fractions</div>
+          <div class="eqn-row">${renderFractionInput('r-n1', 'r-d1')} <span>×</span> ${renderFractionInput('r-n2', 'r-d2')}</div>
+          <div class="step-title">Step 2: Multiply across</div>
+          <div class="eqn-row">${renderFractionInput('ans-num', 'ans-den')}</div>
+          <button class="submit-btn" onclick="checkRewrite4()">Submit Answer</button>
+        `;
+      } else if (currentQ.type === 'threeStepMixed' || currentQ.type === 'threeStepMixedDiv4B' || currentQ.type === 'fourStepMixedDiv4C') {
+        let op = currentQ.type === 'threeStepMixed' ? '×' : '÷';
+        qBox.innerHTML = `<div style="display:flex; align-items:center; gap:8px;">${renderMixed(currentQ.m1.w, currentQ.m1.n, currentQ.m1.d)} <span>${op}</span> ${renderMixed(currentQ.m2.w, currentQ.m2.n, currentQ.m2.d)}</div>`;
+        inArea.innerHTML = `
+          <div class="step-title">Step 1: Improper fractions</div>
+          <div class="eqn-row">${renderFractionInput('s1-n1', 's1-d1')} <span>${op}</span> ${renderFractionInput('s1-n2', 's1-d2')}</div>
+          <div class="step-title">Step 2: Simplify / Rewrite</div>
+          <div class="eqn-row">${renderFractionInput('s2-n1', 's2-d1')} <span>×</span> ${renderFractionInput('s2-n2', 's2-d2')}</div>
+          <div class="step-title">Final Step: Multiply across</div>
+          <div class="eqn-row">${renderFractionInput('ans-num', 'ans-den')}</div>
+          <button class="submit-btn" onclick="checkMultiStep()">Submit Answer</button>
+        `;
+      }
+    }
+
+    function getVal(id) { const el = document.getElementById(id); return el ? parseInt(el.value, 10) : NaN; }
+
+    function handleResult(isCorrect, feedbackMsg = '') {
+      const fb = document.getElementById('feedback-banner');
+      if (isCorrect) {
+        streak++;
+        updateStreakTracker();
+        fb.className = 'feedback-banner txt-correct';
+        fb.innerHTML = feedbackMsg || '✨ Correct! Great job!';
+        if (streak >= 5) {
+          const lvl = subLevels[currentLvlIdx];
+          if (!completedSubLevels.includes(lvl.id)) {
+            completedSubLevels.push(lvl.id);
+            saveProgress(); // Auto-saves to localStorage
+          }
+          triggerConfetti();
+          setTimeout(() => { showModal('Level Mastered!', `Awesome! You mastered Level ${lvl.id}: ${lvl.title}! Progress saved.`); }, 600);
+        } else {
+          setTimeout(nextQuestion, 1200);
+        }
+      } else {
+        streak = 0;
+        updateStreakTracker();
+        fb.className = 'feedback-banner txt-incorrect';
+        fb.innerHTML = feedbackMsg || '❌ Not quite! Streak reset to 0.';
+        setTimeout(nextQuestion, 2000);
+      }
+    }
+
+    function checkAnswer(userAns) { handleResult(userAns === currentQ.ans); }
+
+    function checkTwoStep3(userBool) {
+      const sumVal = getVal('inp-sum');
+      if (sumVal === currentQ.ansSum && userBool === currentQ.ansDivisible) handleResult(true);
+      else handleResult(false, `❌ Incorrect! Digit sum of ${currentQ.num} is ${currentQ.ansSum}.`);
+    }
+
+    function checkFractionInput() {
+      if (getVal('inp-num') === currentQ.ansNum && getVal('inp-den') === currentQ.ansDen) handleResult(true);
+      else handleResult(false, `❌ Incorrect! Answer was ${currentQ.ansNum}/${currentQ.ansDen}`);
+    }
+
+    function checkRewrite4() {
+      const step1Ok = (getVal('r-n1') === currentQ.rwN1 && getVal('r-d1') === currentQ.rwD1 && getVal('r-n2') === currentQ.rwN2 && getVal('r-d2') === currentQ.rwD2);
+      const step2Ok = (getVal('ans-num') === currentQ.ansNum && getVal('ans-den') === currentQ.ansDen);
+      if (step1Ok && step2Ok) handleResult(true);
+      else handleResult(false, `❌ Check your rewritten values or final product.`);
+    }
+
+    function checkMultiStep() {
+      const finalOk = (getVal('ans-num') === currentQ.ansNum && getVal('ans-den') === currentQ.ansDen);
+      if (finalOk) handleResult(true);
+      else handleResult(false, `❌ Check your steps and final answer!`);
+    }
+
+    window.onload = function() {
+      loadProgress();
+      showMap();
+    };
+  </script>
+</body>
+</html>
