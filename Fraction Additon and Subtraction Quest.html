@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fraction & LCD Mastery</title>
+  <title>Fraction Addition and Subtraction Quest</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -31,6 +31,9 @@
 
     /* Map View & Header Controls */
     .map-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .map-btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .save-btn { background: var(--success); color: #0f172a; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .save-btn:hover { background: #4ade80; transform: translateY(-1px); }
     .reset-btn { background: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .reset-btn:hover { background: #dc2626; transform: translateY(-1px); }
 
@@ -101,7 +104,7 @@
   <canvas id="confetti-canvas"></canvas>
 
   <header>
-    <h1>🧩 Fraction & LCD Mastery</h1>
+    <h1>🧩 Fraction Addition and Subtraction Quest</h1>
     <button class="nav-btn" onclick="showMap()">Level Map</button>
   </header>
 
@@ -110,7 +113,10 @@
     <div id="map-view" class="view active">
       <div class="map-header">
         <h2>Skill Progression Map</h2>
-        <button class="reset-btn" onclick="confirmResetAll()">⚠️ Reset All Progress</button>
+        <div class="map-btn-group">
+          <button class="save-btn" onclick="manualSaveProgress()">💾 Save Progress</button>
+          <button class="reset-btn" onclick="confirmResetAll()">⚠️ Reset All Progress</button>
+        </div>
       </div>
       <div id="map-sections"></div>
     </div>
@@ -154,7 +160,7 @@
     <div class="modal-card" style="border-color: var(--success); box-shadow: 0 0 35px rgba(34, 197, 94, 0.4);">
       <div style="font-size: 3.5rem; margin-bottom: 10px;">🏆</div>
       <div class="modal-title" style="color: var(--success);">Grand Fraction Master!</div>
-      <div class="modal-desc">Outstanding work! You have cleared every single level in Fraction & LCD Mastery. You've mastered simplify, LCM, LCD, and operations!</div>
+      <div class="modal-desc">Outstanding work! You have cleared every single level in Fraction Addition and Subtraction Quest. You've mastered simplify, LCM, LCD, and operations!</div>
       <div class="modal-actions">
         <button class="nav-btn" style="background: var(--gold); color: #0f172a;" onclick="closeGrandModal()">Review Level Map</button>
       </div>
@@ -196,6 +202,11 @@
 
     function saveProgress() {
       localStorage.setItem('completedSubLevels', JSON.stringify(completedSubLevels));
+    }
+
+    function manualSaveProgress() {
+      saveProgress();
+      alert("Progress saved successfully!");
     }
 
     function confirmResetAll() {
@@ -608,7 +619,6 @@
                   <input type="number" id="in-d1" class="mini-input">
                 </div>
               </div>
-              <span style="color:var(--gold);">and</span>
               <div class="row-flex">
                 <div style="display:inline-flex; flex-direction:column; align-items:center; gap:2px;">
                   <div>${currentQ.f2.n} × <input type="number" id="in-m2a" class="mini-input"></div>
@@ -623,121 +633,180 @@
                 </div>
               </div>
             </div>
-            <button class="submit-btn" onclick="check3B()">Submit Work</button>
+            <button class="submit-btn" onclick="check3B()">Submit Answer</button>
           </div>`;
       }
       else if (currentQ.type === '3C') {
-        qBox.innerHTML = `<div>Write equivalent fractions with a <b>common denominator</b> for:</div>
-          <div><span class="display-fraction"><span>${currentQ.f1.n}</span><div class="bar"></div><span>${currentQ.f1.d}</span></span> and <span class="display-fraction"><span>${currentQ.f2.n}</span><div class="bar"></div><span>${currentQ.f2.d}</span></span></div>`;
+        qBox.innerHTML = `<div>Rewrite <span class="display-fraction"><span>${currentQ.f1.n}</span><div class="bar"></div><span>${currentQ.f1.d}</span></span> and <span class="display-fraction"><span>${currentQ.f2.n}</span><div class="bar"></div><span>${currentQ.f2.d}</span></span> with their LCD:</div>`;
         inputArea.innerHTML = `
-          <div class="row-flex" style="gap:20px;">
-            <div class="fraction-input"><input type="number" id="in-n1"><div class="fraction-bar"></div><input type="number" id="in-d1"></div>
+          <div class="row-flex" style="gap: 20px;">
+            <div class="fraction-input">
+              <input type="number" id="in-n1" class="mini-input">
+              <div class="fraction-bar"></div>
+              <input type="number" id="in-d1" class="mini-input">
+            </div>
             <span style="font-weight:bold;">and</span>
-            <div class="fraction-input"><input type="number" id="in-n2"><div class="fraction-bar"></div><input type="number" id="in-d2"></div>
+            <div class="fraction-input">
+              <input type="number" id="in-n2" class="mini-input">
+              <div class="fraction-bar"></div>
+              <input type="number" id="in-d2" class="mini-input">
+            </div>
           </div>
-          <button class="submit-btn" onclick="check3C()">Submit Answer</button>`;
+          <button class="submit-btn" onclick="check3C()">Submit Fractions</button>`;
       }
       else if (currentQ.type === '4A') {
-        qBox.innerHTML = `<div>Fill in top numerator:</div>
-          <div class="row-flex" style="font-size:1.6rem; font-weight:bold;">
-            <span class="display-fraction"><span>${currentQ.f1.n}</span><div class="bar"></div><span>${currentQ.f1.d}</span></span>
-            <span>${currentQ.op}</span>
-            <span class="display-fraction"><span>${currentQ.f2.n}</span><div class="bar"></div><span>${currentQ.f2.d}</span></span>
-            <span>=</span>
-            <span class="display-fraction">
-              <input type="number" id="in-n" class="mini-input" style="width:65px; height:45px; font-size:1.3rem;">
-              <div class="bar"></div>
-              <span style="font-size:1.4rem; color:var(--accent);">${currentQ.den}</span>
-            </span>
-          </div>`;
-        inputArea.innerHTML = `<button class="submit-btn" onclick="check4A()">Submit Answer</button>`;
-      }
-      else if (currentQ.type === '4B') {
-        qBox.innerHTML = `<div>Solve by converting to common denominator first:</div>
-          <div class="row-flex" style="font-size:1.6rem; font-weight:bold;">
+        qBox.innerHTML = `<div>Solve:</div>
+          <div class="row-flex" style="font-size:1.5rem; font-weight:bold;">
             <span class="display-fraction"><span>${currentQ.f1.n}</span><div class="bar"></div><span>${currentQ.f1.d}</span></span>
             <span>${currentQ.op}</span>
             <span class="display-fraction"><span>${currentQ.f2.n}</span><div class="bar"></div><span>${currentQ.f2.d}</span></span>
           </div>`;
         inputArea.innerHTML = `
-          <div style="display:flex; flex-direction:column; gap:12px; align-items:center;">
-            <div class="row-flex" style="font-weight:bold;">
-              Step 1 (Common Denominators):
-              <div class="fraction-input"><input type="number" id="in-cn1"><div class="fraction-bar"></div><input type="number" id="in-cd1"></div>
-              <span>${currentQ.op}</span>
-              <div class="fraction-input"><input type="number" id="in-cn2"><div class="fraction-bar"></div><input type="number" id="in-cd2"></div>
+          <div class="row-flex" style="font-size:1.5rem; font-weight:bold;">
+            <span>=</span>
+            <div class="fraction-input">
+              <input type="number" id="in-ansN" class="mini-input">
+              <div class="fraction-bar"></div>
+              <div style="width:65px; text-align:center;">${currentQ.den}</div>
             </div>
-            <div class="row-flex" style="font-weight:bold;">
-              Step 2 (Final Answer Fraction):
-              <div class="fraction-input"><input type="number" id="in-fn"><div class="fraction-bar"></div><input type="number" id="in-fd"></div>
-            </div>
-            <button class="submit-btn" onclick="check4B()">Submit Answer</button>
+          </div>
+          <button class="submit-btn" onclick="check4A()">Submit Answer</button>`;
+      }
+      else if (currentQ.type === '4B') {
+        qBox.innerHTML = `<div>Solve step-by-step:</div>
+          <div class="row-flex" style="font-size:1.5rem; font-weight:bold;">
+            <span class="display-fraction"><span>${currentQ.f1.n}</span><div class="bar"></div><span>${currentQ.f1.d}</span></span>
+            <span>${currentQ.op}</span>
+            <span class="display-fraction"><span>${currentQ.f2.n}</span><div class="bar"></div><span>${currentQ.f2.d}</span></span>
           </div>`;
+        inputArea.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:16px; align-items:center;">
+            <div style="font-weight:bold;">Step 1: Rewrite with Common Denominator</div>
+            <div class="row-flex" style="font-size:1.3rem; font-weight:bold;">
+              <div class="fraction-input">
+                <input type="number" id="in-n1" class="mini-input">
+                <div class="fraction-bar"></div>
+                <input type="number" id="in-d1" class="mini-input">
+              </div>
+              <span>${currentQ.op}</span>
+              <div class="fraction-input">
+                <input type="number" id="in-n2" class="mini-input">
+                <div class="fraction-bar"></div>
+                <input type="number" id="in-d2" class="mini-input">
+              </div>
+            </div>
+            <div style="font-weight:bold;">Step 2: Final Result</div>
+            <div class="row-flex" style="font-size:1.3rem; font-weight:bold;">
+              <span>=</span>
+              <div class="fraction-input">
+                <input type="number" id="in-ansN" class="mini-input">
+                <div class="fraction-bar"></div>
+                <input type="number" id="in-ansD" class="mini-input">
+              </div>
+            </div>
+          </div>
+          <button class="submit-btn" onclick="check4B()">Submit Answer</button>`;
       }
       else if (currentQ.type === '4C') {
         qBox.innerHTML = `<div>Solve directly:</div>
-          <div class="row-flex" style="font-size:1.6rem; font-weight:bold;">
+          <div class="row-flex" style="font-size:1.5rem; font-weight:bold;">
             <span class="display-fraction"><span>${currentQ.f1.n}</span><div class="bar"></div><span>${currentQ.f1.d}</span></span>
             <span>${currentQ.op}</span>
             <span class="display-fraction"><span>${currentQ.f2.n}</span><div class="bar"></div><span>${currentQ.f2.d}</span></span>
-            <span>=</span>
-            <div class="fraction-input"><input type="number" id="in-fn"><div class="fraction-bar"></div><input type="number" id="in-fd"></div>
           </div>`;
-        inputArea.innerHTML = `<button class="submit-btn" onclick="check4C()">Submit Answer</button>`;
+        inputArea.innerHTML = `
+          <div class="row-flex" style="font-size:1.5rem; font-weight:bold;">
+            <span>=</span>
+            <div class="fraction-input">
+              <input type="number" id="in-ansN" class="mini-input">
+              <div class="fraction-bar"></div>
+              <input type="number" id="in-ansD" class="mini-input">
+            </div>
+          </div>
+          <button class="submit-btn" onclick="check4C()">Submit Answer</button>`;
       }
     }
 
-    // Checking Handlers
     function check1A() {
       const n = parseInt(document.getElementById('in-n').value);
       const d = parseInt(document.getElementById('in-d').value);
-      handleResult(n === currentQ.ansN && d === currentQ.ansD);
+      if (n === currentQ.ansN && d === currentQ.ansD) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. ${currentQ.origN}/${currentQ.origD} simplifies to ${currentQ.ansN}/${currentQ.ansD}.`);
+      }
     }
 
     function check1B() {
       const m1 = parseInt(document.getElementById('in-m1').value);
       const m2 = parseInt(document.getElementById('in-m2').value);
       const ans = parseInt(document.getElementById('in-ans').value);
-      handleResult(m1 === currentQ.mult && m2 === currentQ.mult && ans === currentQ.ansN);
+      if (m1 === currentQ.mult && m2 === currentQ.mult && ans === currentQ.ansN) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. Multipliers should both be ${currentQ.mult}, giving numerator ${currentQ.ansN}.`);
+      }
     }
 
     function check1C() {
       const ans = parseInt(document.getElementById('in-ans').value);
-      handleResult(ans === currentQ.ansN);
+      if (ans === currentQ.ansN) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. Missing numerator is ${currentQ.ansN}.`);
+      }
     }
 
     function check2A() {
       let correct = true;
       for (let i = 0; i < 7; i++) {
         const val = parseInt(document.getElementById(`m-${i}`).value);
-        if (val !== currentQ.ansList[i]) correct = false;
+        if (val !== currentQ.ansList[i]) { correct = false; break; }
       }
-      handleResult(correct);
+      if (correct) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. Multipliers of ${currentQ.num}: ${currentQ.ansList.join(', ')}.`);
+      }
     }
 
     function check2B() {
       let correct = true;
       for (let i = 0; i < 7; i++) {
-        if (parseInt(document.getElementById(`m1-${i}`).value) !== currentQ.ans1[i]) correct = false;
-        if (parseInt(document.getElementById(`m2-${i}`).value) !== currentQ.ans2[i]) correct = false;
+        const v1 = parseInt(document.getElementById(`m1-${i}`).value);
+        const v2 = parseInt(document.getElementById(`m2-${i}`).value);
+        if (v1 !== currentQ.ans1[i] || v2 !== currentQ.ans2[i]) { correct = false; break; }
       }
       const lcmVal = parseInt(document.getElementById('in-lcm').value);
       if (lcmVal !== currentQ.ansLCM) correct = false;
-      handleResult(correct);
+
+      if (correct) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. Double check your multiples and LCM (${currentQ.ansLCM}).`);
+      }
     }
 
     function check2C() {
       const lcmVal = parseInt(document.getElementById('in-lcm').value);
-      handleResult(lcmVal === currentQ.ansLCM);
+      if (lcmVal === currentQ.ansLCM) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. The LCM of ${currentQ.n1} and ${currentQ.n2} is ${currentQ.ansLCM}.`);
+      }
     }
 
     function check3A() {
       const lcdVal = parseInt(document.getElementById('in-lcd').value);
-      handleResult(lcdVal === currentQ.ansLCD);
+      if (lcdVal === currentQ.ansLCD) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. The LCD for ${currentQ.f1.d} and ${currentQ.f2.d} is ${currentQ.ansLCD}.`);
+      }
     }
 
     function check3B() {
-      const lcdVal = parseInt(document.getElementById('in-lcd').value);
+      const lcd = parseInt(document.getElementById('in-lcd').value);
       const m1a = parseInt(document.getElementById('in-m1a').value);
       const m1b = parseInt(document.getElementById('in-m1b').value);
       const n1 = parseInt(document.getElementById('in-n1').value);
@@ -748,10 +817,13 @@
       const n2 = parseInt(document.getElementById('in-n2').value);
       const d2 = parseInt(document.getElementById('in-d2').value);
 
-      const ok = lcdVal === currentQ.ansLCD &&
-                 m1a === currentQ.m1 && m1b === currentQ.m1 && n1 === currentQ.ansN1 && d1 === currentQ.ansLCD &&
-                 m2a === currentQ.m2 && m2b === currentQ.m2 && n2 === currentQ.ansN2 && d2 === currentQ.ansLCD;
-      handleResult(ok);
+      if (lcd === currentQ.ansLCD &&
+          m1a === currentQ.m1 && m1b === currentQ.m1 && n1 === currentQ.ansN1 && d1 === currentQ.ansLCD &&
+          m2a === currentQ.m2 && m2b === currentQ.m2 && n2 === currentQ.ansN2 && d2 === currentQ.ansLCD) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. LCD is ${currentQ.ansLCD}. Multipliers: ×${currentQ.m1} and ×${currentQ.m2}.`);
+      }
     }
 
     function check3C() {
@@ -759,35 +831,52 @@
       const d1 = parseInt(document.getElementById('in-d1').value);
       const n2 = parseInt(document.getElementById('in-n2').value);
       const d2 = parseInt(document.getElementById('in-d2').value);
-      handleResult(n1 === currentQ.ans1.n && d1 === currentQ.ans1.d && n2 === currentQ.ans2.n && d2 === currentQ.ans2.d);
+
+      if (n1 === currentQ.ans1.n && d1 === currentQ.ans1.d && n2 === currentQ.ans2.n && d2 === currentQ.ans2.d) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. Equivalent fractions are ${currentQ.ans1.n}/${currentQ.ans1.d} and ${currentQ.ans2.n}/${currentQ.ans2.d}.`);
+      }
     }
 
     function check4A() {
-      const n = parseInt(document.getElementById('in-n').value);
-      handleResult(n === currentQ.ansN);
+      const n = parseInt(document.getElementById('in-ansN').value);
+      if (n === currentQ.ansN) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. ${currentQ.f1.n} ${currentQ.op} ${currentQ.f2.n} = ${currentQ.ansN}.`);
+      }
     }
 
     function check4B() {
-      const cn1 = parseInt(document.getElementById('in-cn1').value);
-      const cd1 = parseInt(document.getElementById('in-cd1').value);
-      const cn2 = parseInt(document.getElementById('in-cn2').value);
-      const cd2 = parseInt(document.getElementById('in-cd2').value);
-      const fn = parseInt(document.getElementById('in-fn').value);
-      const fd = parseInt(document.getElementById('in-fd').value);
+      const n1 = parseInt(document.getElementById('in-n1').value);
+      const d1 = parseInt(document.getElementById('in-d1').value);
+      const n2 = parseInt(document.getElementById('in-n2').value);
+      const d2 = parseInt(document.getElementById('in-d2').value);
+      const ansN = parseInt(document.getElementById('in-ansN').value);
+      const ansD = parseInt(document.getElementById('in-ansD').value);
 
-      const ok = cn1 === currentQ.conv1.n && cd1 === currentQ.conv1.d &&
-                 cn2 === currentQ.conv2.n && cd2 === currentQ.conv2.d &&
-                 fn === currentQ.ansN && fd === currentQ.ansD;
-      handleResult(ok);
+      if (n1 === currentQ.conv1.n && d1 === currentQ.conv1.d &&
+          n2 === currentQ.conv2.n && d2 === currentQ.conv2.d &&
+          ansN === currentQ.ansN && ansD === currentQ.ansD) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. Converted: ${currentQ.conv1.n}/${currentQ.conv1.d} ${currentQ.op} ${currentQ.conv2.n}/${currentQ.conv2.d} = ${currentQ.ansN}/${currentQ.ansD}.`);
+      }
     }
 
     function check4C() {
-      const fn = parseInt(document.getElementById('in-fn').value);
-      const fd = parseInt(document.getElementById('in-fd').value);
-      handleResult(fn === currentQ.ansN && fd === currentQ.ansD);
+      const ansN = parseInt(document.getElementById('in-ansN').value);
+      const ansD = parseInt(document.getElementById('in-ansD').value);
+
+      if (ansN === currentQ.ansN && ansD === currentQ.ansD) {
+        handleResult(true);
+      } else {
+        handleResult(false, `Incorrect. Result is ${currentQ.ansN}/${currentQ.ansD}.`);
+      }
     }
 
-    // Initialize Map View on Startup
+    // Initialize Map on load
     renderMap();
   </script>
 </body>
