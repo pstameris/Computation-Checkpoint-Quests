@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Integer Quest - 8 Levels</title>
+  <!-- Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body { background: #0f172a; color: white; margin: 0; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
@@ -11,8 +13,11 @@
     /* Header & Navigation */
     header { width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #334155; margin-bottom: 25px; }
     h1 { font-size: 1.8rem; margin: 0; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+    .header-actions { display: flex; gap: 10px; }
     .nav-btn { background: #334155; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     .nav-btn:hover { background: #475569; }
+    .save-btn { background: #059669; }
+    .save-btn:hover { background: #10b981; }
 
     /* Container Views */
     .view { width: 100%; max-width: 760px; display: none; }
@@ -20,14 +25,73 @@
 
     /* Dashboard Menu */
     .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-    .level-card { background: #1e293b; padding: 25px; border-radius: 16px; border: 2px solid #334155; cursor: pointer; transition: transform 0.2s, border-color 0.2s; text-align: left; }
-    .level-card:hover { transform: translateY(-4px); border-color: #38bdf8; }
-    .level-card h3 { margin: 0 0 10px 0; color: #38bdf8; font-size: 1.2rem; }
+    
+    .level-card { 
+      background: #1e293b; 
+      padding: 25px; 
+      border-radius: 16px; 
+      border: 2px solid #334155; 
+      cursor: pointer; 
+      transition: all 0.2s ease-in-out; 
+      text-align: left; 
+      position: relative; 
+    }
+
+    /* Unlocked Card Style */
+    .level-card.unlocked { 
+      border-color: #38bdf8; 
+      opacity: 1;
+    }
+    .level-card.unlocked:hover { 
+      transform: translateY(-4px); 
+      box-shadow: 0 8px 20px rgba(56, 189, 248, 0.15); 
+    }
+
+    /* Completed Card Style (Turn Green) */
+    .level-card.completed { 
+      border-color: #10b981; 
+      background: rgba(16, 185, 129, 0.08); 
+      opacity: 1;
+    }
+    .level-card.completed:hover { 
+      transform: translateY(-4px); 
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2); 
+    }
+
+    /* Locked Card Style */
+    .level-card.locked { 
+      opacity: 0.45; 
+      cursor: not-allowed; 
+      border-color: #334155; 
+      filter: grayscale(60%);
+    }
+    .level-card.locked:hover { 
+      transform: none; 
+      box-shadow: none; 
+    }
+
+    .level-card h3 { margin: 0 0 10px 0; color: #38bdf8; font-size: 1.15rem; display: flex; justify-content: space-between; align-items: center; }
+    .level-card.completed h3 { color: #34d399; }
+    .level-card.locked h3 { color: #94a3b8; }
     .level-card p { margin: 0; color: #94a3b8; font-size: 0.9rem; line-height: 1.4; }
+
+    /* Tags / Badges */
+    .status-tag { font-size: 0.75rem; padding: 3px 10px; border-radius: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; }
+    .status-tag.completed-tag { background: #16a34a; color: white; }
+    .status-tag.unlocked-tag { background: #0284c7; color: white; }
+    .status-tag.locked-tag { background: #334155; color: #94a3b8; }
 
     /* Common Game Styling */
     .game-card { background: #1e293b; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+    .header-badges { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 10px; }
     .badge { background: #334155; color: #94a3b8; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+    
+    /* 5 Open/Filled Star Tracker Styling */
+    .streak-badge { background: #0f172a; border: 1px solid #334155; padding: 4px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+    .star { font-size: 1.4rem; line-height: 1; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: inline-block; }
+    .star.empty { color: #475569; }
+    .star.filled { color: #facc15; text-shadow: 0 0 8px rgba(250, 204, 21, 0.6); transform: scale(1.15); }
+
     .statement-box { margin: 20px 0 15px 0; font-size: 2.2rem; font-weight: 800; color: #38bdf8; }
     .instructions { color: #cbd5e1; font-size: 1rem; margin-bottom: 25px; min-height: 24px; }
 
@@ -71,9 +135,13 @@
     button.btn-flip { background: #d97706; }
     button.btn-flip:hover { background: #b45309; }
 
-    .feedback { font-size: 2rem; font-weight: bold; min-height: 50px; margin-top: 15px; display: flex; align-items: center; justify-content: center; }
-    .correct-text { color: #4ade80; animation: pulse 0.5s ease-in-out infinite alternate; }
+    .feedback { font-size: 1.8rem; font-weight: bold; min-height: 50px; margin-top: 15px; display: flex; align-items: center; justify-content: center; }
+    .correct-text { color: #4ade80; }
     .incorrect-text { color: #f87171; }
+    .complete-text { color: #facc15; animation: pulse 0.5s ease-in-out infinite alternate; font-size: 2.2rem; }
+
+    /* Save Toast Notification */
+    #save-toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; }
 
     @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.08); } }
   </style>
@@ -82,42 +150,47 @@
 
   <header>
     <h1>🧪 Integer Quest</h1>
-    <button class="nav-btn" onclick="showDashboard()">Level Select</button>
+    <div class="header-actions">
+      <button class="nav-btn save-btn" onclick="manualSaveProgress()">💾 Save Progress</button>
+      <button class="nav-btn" onclick="showDashboard()">Level Select</button>
+    </div>
   </header>
+
+  <div id="save-toast">Progress Saved! 💾</div>
 
   <!-- DASHBOARD / LEVEL SELECT -->
   <div id="dashboard-view" class="view active">
     <div class="menu-grid">
-      <div class="level-card" onclick="startLevel(1)">
-        <h3>Level 1: Ordering Integers</h3>
+      <div id="card-l1" class="level-card" onclick="startLevel(1)">
+        <h3>Level 1: Ordering Integers <span id="tag-l1"></span></h3>
         <p>Order four cards from least to greatest (-10 to 10).</p>
       </div>
-      <div class="level-card" onclick="startLevel(2)">
-        <h3>Level 2: 2-Card Combine</h3>
+      <div id="card-l2" class="level-card" onclick="startLevel(2)">
+        <h3>Level 2: 2-Card Combine <span id="tag-l2"></span></h3>
         <p>Combine two integers between -10 and 10 to find the total sum.</p>
       </div>
-      <div class="level-card" onclick="startLevel(3)">
-        <h3>Level 3: 4-Card Sorting</h3>
-        <p>Sort positive and negative numbers into separate boxes, then calculate the total.</p>
+      <div id="card-l3" class="level-card" onclick="startLevel(3)">
+        <h3>Level 3: 4-Card Sorting <span id="tag-l3"></span></h3>
+        <p>Sort positive and negative numbers into separate boxes, then calculate total.</p>
       </div>
-      <div class="level-card" onclick="startLevel(4)">
-        <h3>Level 4: Equation Builder</h3>
+      <div id="card-l4" class="level-card" onclick="startLevel(4)">
+        <h3>Level 4: Equation Builder <span id="tag-l4"></span></h3>
         <p>Drag numbers into slots to set up the given addition statement and solve.</p>
       </div>
-      <div class="level-card" onclick="startLevel(5)">
-        <h3>Level 5: 2-Integer Addition</h3>
+      <div id="card-l5" class="level-card" onclick="startLevel(5)">
+        <h3>Level 5: 2-Integer Addition <span id="tag-l5"></span></h3>
         <p>Add two integers between -30 and 30.</p>
       </div>
-      <div class="level-card" onclick="startLevel(6)">
-        <h3>Level 6: Subtraction & Flip</h3>
+      <div id="card-l6" class="level-card" onclick="startLevel(6)">
+        <h3>Level 6: Subtraction & Flip <span id="tag-l6"></span></h3>
         <p>Set up subtraction equations, then click FLIP to add the opposite!</p>
       </div>
-      <div class="level-card" onclick="startLevel(7)">
-        <h3>Level 7: 2-Integer Subtraction</h3>
+      <div id="card-l7" class="level-card" onclick="startLevel(7)">
+        <h3>Level 7: 2-Integer Subtraction <span id="tag-l7"></span></h3>
         <p>Subtract two integers between -30 and 30.</p>
       </div>
-      <div class="level-card" onclick="startLevel(8)">
-        <h3>Level 8: Mixed Operations</h3>
+      <div id="card-l8" class="level-card" onclick="startLevel(8)">
+        <h3>Level 8: Mixed Operations <span id="tag-l8"></span></h3>
         <p>Solve mixed addition and subtraction of integers between -30 and 30.</p>
       </div>
     </div>
@@ -126,7 +199,10 @@
   <!-- LEVEL 1 VIEW: ORDERING -->
   <div id="level1-view" class="view">
     <div class="game-card">
-      <span class="badge">Level 1</span>
+      <div class="header-badges">
+        <span class="badge">Level 1</span>
+        <div id="l1-streak-tag" class="streak-badge"></div>
+      </div>
       <p class="instructions">Drag or click cards to order them from <strong>LEAST</strong> to <strong>GREATEST</strong>!</p>
 
       <div class="bank-title">Unordered Cards</div>
@@ -154,7 +230,10 @@
   <!-- LEVEL 2 VIEW: 2-CARD COMBINE -->
   <div id="level2-view" class="view">
     <div class="game-card">
-      <span class="badge">Level 2</span>
+      <div class="header-badges">
+        <span class="badge">Level 2</span>
+        <div id="l2-streak-tag" class="streak-badge"></div>
+      </div>
       <p class="instructions">Combine the two cards below!</p>
       <div style="display: flex; justify-content: center; gap: 20px; margin: 30px 0;">
         <div id="l2-card1" class="number-card" style="width: 100px; height: 130px; font-size: 2.5rem; border-radius: 14px;"></div>
@@ -164,7 +243,7 @@
         <label style="font-size: 1.4rem; font-weight: 700; margin-right: 10px;">Combine:</label>
         <input type="number" id="l2-input" class="solve-input" required autocomplete="off" />
         <br><br>
-        <button type="submit" class="action-btn">Submit</button>
+        <button type="submit" id="l2-btn" class="action-btn">Submit</button>
       </form>
       <div id="l2-feedback" class="feedback"></div>
     </div>
@@ -173,7 +252,10 @@
   <!-- LEVEL 3 VIEW: 4-CARD SORTING -->
   <div id="level3-view" class="view">
     <div class="game-card">
-      <span class="badge">Level 3</span>
+      <div class="header-badges">
+        <span class="badge">Level 3</span>
+        <div id="l3-streak-tag" class="streak-badge"></div>
+      </div>
       <p class="instructions">Drag or click cards to sort them into positive and negative boxes, then combine!</p>
 
       <div id="l3-pool" class="cards-bank" style="min-height: 100px; margin-bottom: 20px; justify-content: center;" ondragover="allowDrop(event)" ondrop="dropL3(event, 'pool')"></div>
@@ -193,7 +275,7 @@
         <label style="font-size: 1.4rem; font-weight: 700; margin-right: 10px;">Combine:</label>
         <input type="number" id="l3-input" class="solve-input" required autocomplete="off" />
         <br><br>
-        <button type="submit" class="action-btn">Submit</button>
+        <button type="submit" id="l3-btn" class="action-btn">Submit</button>
       </form>
       <div id="l3-feedback" class="feedback"></div>
     </div>
@@ -202,7 +284,10 @@
   <!-- LEVEL 4 VIEW: EQUATION BUILDER -->
   <div id="level4-view" class="view">
     <div class="game-card">
-      <span class="badge">Level 4</span>
+      <div class="header-badges">
+        <span class="badge">Level 4</span>
+        <div id="l4-streak-tag" class="streak-badge"></div>
+      </div>
       <div id="l4-statement" class="statement-box"></div>
       <p class="instructions">Drag the matching cards into the boxes below, then solve!</p>
 
@@ -227,14 +312,17 @@
   <!-- LEVEL 5 VIEW: 2-INTEGER ADDITION (-30 to 30) -->
   <div id="level5-view" class="view">
     <div class="game-card">
-      <span class="badge">Level 5</span>
+      <div class="header-badges">
+        <span class="badge">Level 5</span>
+        <div id="l5-streak-tag" class="streak-badge"></div>
+      </div>
       <p class="instructions">Solve the addition problem!</p>
       <div id="l5-statement" class="statement-box"></div>
 
       <form onsubmit="checkL5(event)">
         <input type="number" id="l5-input" class="solve-input" placeholder="?" required autocomplete="off" />
         <br><br>
-        <button type="submit" class="action-btn">Submit Answer</button>
+        <button type="submit" id="l5-btn" class="action-btn">Submit Answer</button>
       </form>
       <div id="l5-feedback" class="feedback"></div>
     </div>
@@ -243,7 +331,10 @@
   <!-- LEVEL 6 VIEW: SUBTRACTION & FLIP -->
   <div id="level6-view" class="view">
     <div class="game-card">
-      <span class="badge">Level 6</span>
+      <div class="header-badges">
+        <span class="badge">Level 6</span>
+        <div id="l6-streak-tag" class="streak-badge"></div>
+      </div>
       <div id="l6-statement" class="statement-box"></div>
       <p id="l6-instructions" class="instructions">Drag cards into the boxes to setup the subtraction problem!</p>
 
@@ -270,14 +361,17 @@
   <!-- LEVEL 7 VIEW: 2-INTEGER SUBTRACTION (-30 to 30) -->
   <div id="level7-view" class="view">
     <div class="game-card">
-      <span class="badge">Level 7</span>
+      <div class="header-badges">
+        <span class="badge">Level 7</span>
+        <div id="l7-streak-tag" class="streak-badge"></div>
+      </div>
       <p class="instructions">Solve the subtraction problem!</p>
       <div id="l7-statement" class="statement-box"></div>
 
       <form onsubmit="checkL7(event)">
         <input type="number" id="l7-input" class="solve-input" placeholder="?" required autocomplete="off" />
         <br><br>
-        <button type="submit" class="action-btn">Submit Answer</button>
+        <button type="submit" id="l7-btn" class="action-btn">Submit Answer</button>
       </form>
       <div id="l7-feedback" class="feedback"></div>
     </div>
@@ -286,28 +380,109 @@
   <!-- LEVEL 8 VIEW: MIXED ADDITION & SUBTRACTION (-30 to 30) -->
   <div id="level8-view" class="view">
     <div class="game-card">
-      <span class="badge">Level 8</span>
+      <div class="header-badges">
+        <span class="badge">Level 8</span>
+        <div id="l8-streak-tag" class="streak-badge"></div>
+      </div>
       <p class="instructions">Solve the mixed problem!</p>
       <div id="l8-statement" class="statement-box"></div>
 
       <form onsubmit="checkL8(event)">
         <input type="number" id="l8-input" class="solve-input" placeholder="?" required autocomplete="off" />
         <br><br>
-        <button type="submit" class="action-btn">Submit Answer</button>
+        <button type="submit" id="l8-btn" class="action-btn">Submit Answer</button>
       </form>
       <div id="l8-feedback" class="feedback"></div>
     </div>
   </div>
 
   <script>
+    const REQUIRED_STREAK = 5;
+    const TOTAL_LEVELS = 8;
+    let currentStreak = 0;
+    let currentLevel = 1;
+    let completedLevels = new Set(JSON.parse(localStorage.getItem('iq_completed_levels') || '[]'));
+
+    function isLevelUnlocked(lvl) {
+      if (lvl === 1) return true; // Level 1 is always unlocked
+      return completedLevels.has(lvl - 1); // Level N unlocks when Level N-1 is completed
+    }
+
+    function updateProgressUI() {
+      for (let lvl = 1; lvl <= TOTAL_LEVELS; lvl++) {
+        const card = document.getElementById(`card-l${lvl}`);
+        const tag = document.getElementById(`tag-l${lvl}`);
+        if (!card || !tag) continue;
+
+        const unlocked = isLevelUnlocked(lvl);
+        const completed = completedLevels.has(lvl);
+
+        // Reset classes
+        card.classList.remove('locked', 'unlocked', 'completed');
+
+        if (completed) {
+          card.classList.add('completed');
+          tag.innerHTML = '<span class="status-tag completed-tag">✅ Done</span>';
+        } else if (unlocked) {
+          card.classList.add('unlocked');
+          tag.innerHTML = '<span class="status-tag unlocked-tag">🔓 Unlocked</span>';
+        } else {
+          card.classList.add('locked');
+          tag.innerHTML = '<span class="status-tag locked-tag">🔒 Locked</span>';
+        }
+      }
+    }
+
+    function updateStreakDisplay() {
+      const tag = document.getElementById(`l${currentLevel}-streak-tag`);
+      if (tag) {
+        let starsHTML = '';
+        for (let i = 1; i <= REQUIRED_STREAK; i++) {
+          if (i <= currentStreak) {
+            starsHTML += '<span class="star filled">★</span>';
+          } else {
+            starsHTML += '<span class="star empty">☆</span>';
+          }
+        }
+        tag.innerHTML = starsHTML;
+      }
+    }
+
+    function markLevelComplete(lvl) {
+      completedLevels.add(lvl);
+      localStorage.setItem('iq_completed_levels', JSON.stringify(Array.from(completedLevels)));
+      updateProgressUI();
+    }
+
+    function manualSaveProgress() {
+      localStorage.setItem('iq_completed_levels', JSON.stringify(Array.from(completedLevels)));
+      const toast = document.getElementById('save-toast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2000);
+    }
+
+    function triggerConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+      }
+    }
+
     function showDashboard() {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('dashboard-view').classList.add('active');
+      updateProgressUI();
     }
 
     function startLevel(lvl) {
+      if (!isLevelUnlocked(lvl)) return; // Prevent starting locked levels
+
+      currentLevel = lvl;
+      currentStreak = 0;
+      updateStreakDisplay();
+
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById(`level${lvl}-view`).classList.add('active');
+
       if (lvl === 1) initL1();
       if (lvl === 2) initL2();
       if (lvl === 3) initL3();
@@ -316,6 +491,34 @@
       if (lvl === 6) initL6();
       if (lvl === 7) initL7();
       if (lvl === 8) initL8();
+    }
+
+    function handleCorrectAnswer(nextProblemFn, btnId) {
+      currentStreak++;
+      updateStreakDisplay();
+      const fb = document.getElementById(`l${currentLevel}-feedback`);
+
+      if (currentStreak >= REQUIRED_STREAK) {
+        fb.innerHTML = '<span class="complete-text">Level Complete! 🎉🏆</span>';
+        triggerConfetti();
+        markLevelComplete(currentLevel);
+        if (btnId) document.getElementById(btnId).disabled = true;
+        setTimeout(showDashboard, 2200);
+      } else {
+        fb.innerHTML = `<span class="correct-text">Correct! 👍</span>`;
+        if (btnId) document.getElementById(btnId).disabled = true;
+        setTimeout(() => {
+          if (btnId) document.getElementById(btnId).disabled = false;
+          nextProblemFn();
+        }, 1200);
+      }
+    }
+
+    function handleIncorrectAnswer(msg = "Try again! Streak reset.") {
+      currentStreak = 0;
+      updateStreakDisplay();
+      const fb = document.getElementById(`l${currentLevel}-feedback`);
+      fb.innerHTML = `<span class="incorrect-text">${msg}</span>`;
     }
 
     function getRandomInt(min, max, excludeZero = false) {
@@ -428,10 +631,9 @@
       ];
 
       const placedVals = slots.map(s => s.children.length > 0 ? parseInt(s.children[0].dataset.value, 10) : null);
-      const fb = document.getElementById('l1-feedback');
 
       if (placedVals.includes(null)) {
-        fb.innerHTML = '<span class="incorrect-text">Place all 4 cards into the slots first!</span>';
+        document.getElementById('l1-feedback').innerHTML = '<span class="incorrect-text">Place all 4 cards into slots first!</span>';
         return;
       }
 
@@ -444,11 +646,9 @@
       }
 
       if (isSorted) {
-        fb.innerHTML = '<span class="correct-text">Correct! 😊</span>';
-        document.getElementById('l1-btn').disabled = true;
-        setTimeout(initL1, 2000);
+        handleCorrectAnswer(initL1, 'l1-btn');
       } else {
-        fb.innerHTML = '<span class="incorrect-text">Try again! Order from smallest to largest.</span>';
+        handleIncorrectAnswer("Incorrect order! Streak reset.");
       }
     }
 
@@ -463,17 +663,16 @@
       styleCardEl(document.getElementById('l2-card2'), l2Num2);
       document.getElementById('l2-input').value = '';
       document.getElementById('l2-feedback').innerHTML = '';
+      document.getElementById('l2-btn').disabled = false;
     }
 
     function checkL2(e) {
       e.preventDefault();
       const val = parseInt(document.getElementById('l2-input').value, 10);
-      const fb = document.getElementById('l2-feedback');
       if (val === l2Target) {
-        fb.innerHTML = '<span class="correct-text">Correct! 😊</span>';
-        setTimeout(initL2, 1800);
+        handleCorrectAnswer(initL2, 'l2-btn');
       } else {
-        fb.innerHTML = '<span class="incorrect-text">Try again</span>';
+        handleIncorrectAnswer();
       }
     }
 
@@ -486,6 +685,7 @@
       pool.innerHTML = ''; pos.innerHTML = ''; neg.innerHTML = '';
       document.getElementById('l3-input').value = '';
       document.getElementById('l3-feedback').innerHTML = '';
+      document.getElementById('l3-btn').disabled = false;
 
       l3Vals = [getRandomInt(-10, 10, true), getRandomInt(-10, 10, true), getRandomInt(-10, 10, true), getRandomInt(-10, 10, true)];
       l3Vals.forEach((v, i) => {
@@ -530,13 +730,11 @@
       const poolEmpty = document.getElementById('l3-pool').children.length === 0;
       const wrongInPos = Array.from(document.getElementById('l3-pos-zone').children).some(c => parseInt(c.dataset.value, 10) < 0);
       const wrongInNeg = Array.from(document.getElementById('l3-neg-zone').children).some(c => parseInt(c.dataset.value, 10) > 0);
-      const fb = document.getElementById('l3-feedback');
 
       if (poolEmpty && !wrongInPos && !wrongInNeg && userVal === target) {
-        fb.innerHTML = '<span class="correct-text">Correct! 😊</span>';
-        setTimeout(initL3, 1800);
+        handleCorrectAnswer(initL3, 'l3-btn');
       } else {
-        fb.innerHTML = '<span class="incorrect-text">Try again! Make sure cards are sorted.</span>';
+        handleIncorrectAnswer("Sort incorrectly or wrong total! Streak reset.");
       }
     }
 
@@ -547,6 +745,7 @@
       document.getElementById('l4-feedback').innerHTML = '';
       document.getElementById('l4-slot1').innerHTML = '';
       document.getElementById('l4-slot2').innerHTML = '';
+      document.getElementById('l4-btn').disabled = false;
 
       l4Num1 = getRandomInt(-10, 10);
       l4Num2 = getRandomInt(-10, 10);
@@ -584,13 +783,11 @@
       const c1 = document.getElementById('l4-slot1').children[0];
       const c2 = document.getElementById('l4-slot2').children[0];
       const userAns = parseInt(document.getElementById('l4-input').value, 10);
-      const fb = document.getElementById('l4-feedback');
 
       if (c1 && c2 && parseInt(c1.dataset.value, 10) === l4Num1 && parseInt(c2.dataset.value, 10) === l4Num2 && userAns === (l4Num1 + l4Num2)) {
-        fb.innerHTML = '<span class="correct-text">Correct! 😊</span>';
-        setTimeout(initL4, 2000);
+        handleCorrectAnswer(initL4, 'l4-btn');
       } else {
-        fb.innerHTML = '<span class="incorrect-text">Try again</span>';
+        handleIncorrectAnswer();
       }
     }
 
@@ -603,18 +800,17 @@
       document.getElementById('l5-statement').innerText = `${fmtNum(n1)} + ${fmtNum(n2)}`;
       document.getElementById('l5-input').value = '';
       document.getElementById('l5-feedback').innerHTML = '';
+      document.getElementById('l5-btn').disabled = false;
       document.getElementById('l5-input').focus();
     }
 
     function checkL5(e) {
       e.preventDefault();
       const val = parseInt(document.getElementById('l5-input').value, 10);
-      const fb = document.getElementById('l5-feedback');
       if (val === l5Target) {
-        fb.innerHTML = '<span class="correct-text">Correct! 😊</span>';
-        setTimeout(initL5, 1800);
+        handleCorrectAnswer(initL5, 'l5-btn');
       } else {
-        fb.innerHTML = '<span class="incorrect-text">Try again</span>';
+        handleIncorrectAnswer();
       }
     }
 
@@ -650,19 +846,39 @@
       });
     }
 
+    function clearSlotL6(slotId) {
+      if (l6Step > 1) return;
+      const slot = document.getElementById(`l6-${slotId}`);
+      if (slot && slot.children.length > 0) document.getElementById('l6-bank').appendChild(slot.children[0]);
+    }
+
+    function dropL6(e, targetId) {
+      e.preventDefault();
+      if (l6Step > 1) return;
+      const card = document.getElementById(e.dataTransfer.getData('text/plain'));
+      if (!card) return;
+      if (targetId === 'slot1' || targetId === 'slot2') {
+        const slot = document.getElementById(`l6-${targetId}`);
+        if (slot.children.length > 0) document.getElementById('l6-bank').appendChild(slot.children[0]);
+        slot.appendChild(card);
+      } else {
+        document.getElementById('l6-bank').appendChild(card);
+      }
+    }
+
     function handleL6Action(e) {
       e.preventDefault();
       if (l6Step === 1) {
         const c1 = document.getElementById('l6-slot1').children[0];
         const c2 = document.getElementById('l6-slot2').children[0];
         if (c1 && c2 && parseInt(c1.dataset.value, 10) === l6Num1 && parseInt(c2.dataset.value, 10) === l6Num2) {
-          document.getElementById('l6-feedback').innerHTML = '<span class="correct-text">Setup Correct! 😊</span>';
+          document.getElementById('l6-feedback').innerHTML = '<span class="correct-text">Setup Correct! 👍</span>';
           document.getElementById('l6-instructions').innerText = 'Now click FLIP to change subtraction to adding the opposite!';
           l6Step = 2;
           const btn = document.getElementById('l6-btn');
           btn.innerText = 'Flip Equation 🔄'; btn.className = 'action-btn btn-flip';
         } else {
-          document.getElementById('l6-feedback').innerHTML = '<span class="incorrect-text">Try again! Match setup to statement.</span>';
+          handleIncorrectAnswer("Incorrect setup! Streak reset.");
         }
       } else if (l6Step === 2) {
         document.getElementById('l6-feedback').innerHTML = '';
@@ -688,32 +904,10 @@
       } else if (l6Step === 3) {
         const userAns = parseInt(document.getElementById('l6-input').value, 10);
         if (userAns === (l6Num1 - l6Num2)) {
-          document.getElementById('l6-feedback').innerHTML = '<span class="correct-text">Correct! 😊</span>';
-          document.getElementById('l6-btn').disabled = true;
-          setTimeout(initL6, 2200);
+          handleCorrectAnswer(initL6, 'l6-btn');
         } else {
-          document.getElementById('l6-feedback').innerHTML = '<span class="incorrect-text">Try again!</span>';
+          handleIncorrectAnswer();
         }
-      }
-    }
-
-    function clearSlotL6(slotId) {
-      if (l6Step > 1) return;
-      const slot = document.getElementById(`l6-${slotId}`);
-      if (slot && slot.children.length > 0) document.getElementById('l6-bank').appendChild(slot.children[0]);
-    }
-
-    function dropL6(e, targetId) {
-      e.preventDefault();
-      if (l6Step > 1) return;
-      const card = document.getElementById(e.dataTransfer.getData('text/plain'));
-      if (!card) return;
-      if (targetId === 'slot1' || targetId === 'slot2') {
-        const slot = document.getElementById(`l6-${targetId}`);
-        if (slot.children.length > 0) document.getElementById('l6-bank').appendChild(slot.children[0]);
-        slot.appendChild(card);
-      } else {
-        document.getElementById('l6-bank').appendChild(card);
       }
     }
 
@@ -726,48 +920,47 @@
       document.getElementById('l7-statement').innerText = `${fmtNum(n1)} - ${fmtNum(n2)}`;
       document.getElementById('l7-input').value = '';
       document.getElementById('l7-feedback').innerHTML = '';
+      document.getElementById('l7-btn').disabled = false;
       document.getElementById('l7-input').focus();
     }
 
     function checkL7(e) {
       e.preventDefault();
       const val = parseInt(document.getElementById('l7-input').value, 10);
-      const fb = document.getElementById('l7-feedback');
       if (val === l7Target) {
-        fb.innerHTML = '<span class="correct-text">Correct! 😊</span>';
-        setTimeout(initL7, 1800);
+        handleCorrectAnswer(initL7, 'l7-btn');
       } else {
-        fb.innerHTML = '<span class="incorrect-text">Try again</span>';
+        handleIncorrectAnswer();
       }
     }
 
-    // ================= LEVEL 8 LOGIC (MIXED -30 TO 30) =================
+    // ================= LEVEL 8 LOGIC (MIXED OPERATIONS -30 TO 30) =================
     let l8Target = 0;
     function initL8() {
       const n1 = getRandomInt(-30, 30);
       const n2 = getRandomInt(-30, 30);
-      const isAddition = Math.random() < 0.5;
-      
-      l8Target = isAddition ? (n1 + n2) : (n1 - n2);
-      const opSymbol = isAddition ? '+' : '-';
-      
-      document.getElementById('l8-statement').innerText = `${fmtNum(n1)} ${opSymbol} ${fmtNum(n2)}`;
+      const isAdd = Math.random() > 0.5;
+      l8Target = isAdd ? (n1 + n2) : (n1 - n2);
+      const op = isAdd ? '+' : '-';
+      document.getElementById('l8-statement').innerText = `${fmtNum(n1)} ${op} ${fmtNum(n2)}`;
       document.getElementById('l8-input').value = '';
       document.getElementById('l8-feedback').innerHTML = '';
+      document.getElementById('l8-btn').disabled = false;
       document.getElementById('l8-input').focus();
     }
 
     function checkL8(e) {
       e.preventDefault();
       const val = parseInt(document.getElementById('l8-input').value, 10);
-      const fb = document.getElementById('l8-feedback');
       if (val === l8Target) {
-        fb.innerHTML = '<span class="correct-text">Correct! 😊</span>';
-        setTimeout(initL8, 1800);
+        handleCorrectAnswer(initL8, 'l8-btn');
       } else {
-        fb.innerHTML = '<span class="incorrect-text">Try again</span>';
+        handleIncorrectAnswer();
       }
     }
+
+    // Initialize level locking & completion status on startup
+    updateProgressUI();
   </script>
 </body>
 </html>
