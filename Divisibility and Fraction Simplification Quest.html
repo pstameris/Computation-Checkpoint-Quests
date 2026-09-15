@@ -18,12 +18,25 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; overflow-x: hidden; }
+
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
 
     header { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
     h1 { font-size: 1.5rem; color: var(--accent); }
+    .header-btns { display: flex; gap: 8px; }
     .nav-btn { background: var(--border); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
     .nav-btn:hover { background: #475569; }
+    .nav-btn.save-btn { background: #0284c7; }
+    .nav-btn.save-btn:hover { background: #0369a1; }
 
     .container { width: 100%; max-width: 900px; }
     .view { display: none; }
@@ -70,7 +83,7 @@
     .card-item { background: var(--bg); border: 2px solid var(--border); border-radius: 12px; padding: 16px; font-size: 1.4rem; font-weight: bold; cursor: pointer; transition: all 0.2s; user-select: none; }
     .card-item.selected { border-color: var(--gold); background: rgba(250, 204, 21, 0.15); box-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
 
-    /* Drag and Drop Zone CSS (Level 3B) */
+    /* Drag and Drop Zone CSS */
     .drag-cards-pool { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 550px; min-height: 60px; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 2px dashed var(--border); border-radius: 12px; margin-bottom: 15px; }
     .drag-card-item { background: var(--card-bg); border: 2px solid var(--accent); color: var(--gold); font-size: 1.3rem; font-weight: bold; padding: 10px 18px; border-radius: 10px; cursor: grab; user-select: none; transition: transform 0.2s, border-color 0.2s; }
     .drag-card-item:active { cursor: grabbing; transform: scale(1.05); }
@@ -78,7 +91,6 @@
 
     .drop-zones-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; width: 100%; max-width: 650px; }
     .drop-zone { background: var(--bg); border: 2px dashed var(--border); border-radius: 14px; padding: 12px 8px; min-height: 120px; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; cursor: pointer; }
-    .drop-zone.drag-over { border-color: var(--gold); background: rgba(250, 204, 21, 0.08); }
     .drop-zone-title { font-size: 0.85rem; font-weight: bold; color: var(--accent); margin-bottom: 8px; text-align: center; }
 
     /* Fraction Display and Input */
@@ -100,9 +112,14 @@
 </head>
 <body>
 
+  <canvas id="confetti-canvas"></canvas>
+
   <header>
     <h1>⭐ Divisibility & Fraction Mastery</h1>
-    <button class="nav-btn" onclick="showMap()">Level Map</button>
+    <div class="header-btns">
+      <button class="nav-btn save-btn" onclick="saveProgress()">Save Progress</button>
+      <button class="nav-btn" onclick="showMap()">Level Map</button>
+    </div>
   </header>
 
   <div class="container">
@@ -169,6 +186,8 @@
       { id: '6C', group: 'Level 6: Double Simplification', title: "Double Reduction Fractions", desc: "Fractions requiring 2 steps (or dividing by 6, 9, 100)." }
     ];
 
+    const STORAGE_KEY = 'divisibility_fraction_mastery_save';
+
     let maxUnlocked = 0;
     let completedSubLevels = [];
     let currentLvlIdx = 0;
@@ -176,10 +195,85 @@
     let currentQ = null;
     let selectedCards = [];
     let stepChoice2A = null;
+    let isProcessing = false;
 
     // Drag & Drop State
     let activeTapCard = null;
     let dropZoneState = { '5': [], 'both': [], 'neither': [] };
+
+    // Storage Management
+    function saveProgress(showAlert = true) {
+      const payload = {
+        maxUnlocked: maxUnlocked,
+        completedSubLevels: completedSubLevels
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      if (showAlert) {
+        alert('Progress saved successfully!');
+      }
+    }
+
+    function loadProgress() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (typeof data.maxUnlocked === 'number') maxUnlocked = data.maxUnlocked;
+          if (Array.isArray(data.completedSubLevels)) completedSubLevels = data.completedSubLevels;
+        } catch (e) {
+          console.error('Failed to parse saved progress:', e);
+        }
+      }
+    }
+
+    // Canvas Confetti Animation Engine
+    function triggerConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const pieces = [];
+      const colors = ['#facc15', '#38bdf8', '#22c55e', '#ef4444', '#a855f7', '#ec4899', '#f97316'];
+
+      for (let i = 0; i < 120; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 8 + 6,
+          speedY: Math.random() * 3 + 3,
+          speedX: Math.random() * 4 - 2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotationSpeed: Math.random() * 10 - 5
+        });
+      }
+
+      let frameCount = 0;
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.rotationSpeed;
+        });
+
+        frameCount++;
+        if (frameCount < 150) {
+          requestAnimationFrame(render);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      render();
+    }
 
     function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
     function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
@@ -187,8 +281,7 @@
 
     // Master Question Generator
     function buildQuestion(lvlIdx) {
-      // --- LEVEL 1: DIVISIBILITY BY 2 ---
-      if (lvlIdx === 0) { // 1A
+      if (lvlIdx === 0) {
         let num = randInt(100, 999);
         return {
           type: 'yesno',
@@ -197,7 +290,7 @@
           ans: (num % 2 === 0)
         };
       }
-      if (lvlIdx === 1) { // 1B
+      if (lvlIdx === 1) {
         let numbers = generateUniqueSet(4, n => n % 2 === 0);
         return {
           type: 'multiselect',
@@ -207,10 +300,10 @@
           ans: numbers.filter(n => n % 2 === 0)
         };
       }
-      if (lvlIdx === 2) { // 1C: 60% by 2, 40% by 4
+      if (lvlIdx === 2) {
         const simpleBases = [{n: 1, d: 2}, {n: 1, d: 3}, {n: 2, d: 3}, {n: 1, d: 4}, {n: 3, d: 4}, {n: 1, d: 5}, {n: 2, d: 5}, {n: 3, d: 5}, {n: 4, d: 5}, {n: 1, d: 7}, {n: 2, d: 7}, {n: 3, d: 7}, {n: 4, d: 7}, {n: 5, d: 7}];
         let base = simpleBases[randInt(0, simpleBases.length - 1)];
-        let mult = (Math.random() < 0.6) ? 2 : 4; // 60% div by 2, 40% div by 4
+        let mult = (Math.random() < 0.6) ? 2 : 4;
         return {
           type: 'fraction',
           rule: "💡 <b>Fraction Rule (2 or 4):</b> Divide top and bottom by 2 (or 4) to simplify!",
@@ -222,8 +315,7 @@
         };
       }
 
-      // --- LEVEL 2: DIVISIBILITY BY 3 ---
-      if (lvlIdx === 3) { // 2A
+      if (lvlIdx === 3) {
         let num = randInt(100, 999);
         let dSum = digitSum(num);
         return {
@@ -235,7 +327,7 @@
           ansDivisible: (dSum % 3 === 0)
         };
       }
-      if (lvlIdx === 4) { // 2B: Small sums < 20
+      if (lvlIdx === 4) {
         let numbers = [];
         let targetMatches = randInt(1, 3);
         while(numbers.length < 4) {
@@ -256,7 +348,7 @@
           ans: numbers.filter(n => n % 3 === 0)
         };
       }
-      if (lvlIdx === 5) { // 2C: Multipliers 3 or 9
+      if (lvlIdx === 5) {
         const simpleBases = [{n: 1, d: 2}, {n: 1, d: 4}, {n: 3, d: 4}, {n: 1, d: 5}, {n: 2, d: 5}, {n: 4, d: 5}, {n: 1, d: 7}, {n: 2, d: 7}];
         let base = simpleBases[randInt(0, simpleBases.length - 1)];
         let mult = [3, 9][randInt(0, 1)];
@@ -271,8 +363,7 @@
         };
       }
 
-      // --- LEVEL 3: DIVISIBILITY BY 5 & 10 ---
-      if (lvlIdx === 6) { // 3A
+      if (lvlIdx === 6) {
         let category = randInt(1, 3);
         let num;
         if (category === 1) num = randInt(10, 99) * 10 + 5;
@@ -285,15 +376,15 @@
 
         return {
           type: 'choice3',
-          rule: "💡 <b>Rules for 5 & 10:</b><br>• Ends in <b>5 ONLY</b> $\\rightarrow$ Divisible by <b>5 ONLY</b>.<br>• Ends in <b>0</b> $\\rightarrow$ Divisible by <b>BOTH 5 and 10</b>.<br>• Ends in anything else $\\rightarrow$ <b>Neither</b>.",
+          rule: "💡 <b>Rules for 5 & 10:</b><br>• Ends in <b>5 ONLY</b> &rarr; Divisible by <b>5 ONLY</b>.<br>• Ends in <b>0</b> &rarr; Divisible by <b>BOTH 5 and 10</b>.<br>• Ends in anything else &rarr; <b>Neither</b>.",
           prompt: `Is <span style="font-size: 2.2rem; color: var(--gold);">${num}</span> divisible by 5 ONLY, BOTH 5 & 10, or Neither?`,
           ans: ansText
         };
       }
-      if (lvlIdx === 7) { // 3B: Drag and Drop 4 numbers into 3 drop zones
-        let n1 = randInt(10, 89) * 10 + 5; // 5 only
-        let n2 = randInt(10, 89) * 10;     // Both
-        let n3 = randInt(100, 899); while(n3 % 5 === 0) n3++; // Neither
+      if (lvlIdx === 7) {
+        let n1 = randInt(10, 89) * 10 + 5;
+        let n2 = randInt(10, 89) * 10;
+        let n3 = randInt(100, 899); while(n3 % 5 === 0) n3++;
         let n4 = randInt(100, 899);
 
         let numbers = [n1, n2, n3, n4].sort(() => Math.random() - 0.5);
@@ -307,13 +398,13 @@
 
         return {
           type: 'dragDrop3B',
-          rule: "💡 <b>Drag & Drop Categorization:</b> Drag each card into its drop zone (or tap a card, then tap a zone)!",
+          rule: "💡 <b>Categorization:</b> Tap a card, then tap a target zone!",
           prompt: "Place all 4 numbers into their correct zones:",
           numbers: numbers,
           ansMap: correctMap
         };
       }
-      if (lvlIdx === 8) { // 3C: Diverse Denominators
+      if (lvlIdx === 8) {
         const basePool3C = [
           {n: 1, d: 2}, {n: 1, d: 3}, {n: 2, d: 3}, {n: 1, d: 4}, {n: 3, d: 4},
           {n: 1, d: 6}, {n: 5, d: 6}, {n: 1, d: 7}, {n: 2, d: 7}, {n: 3, d: 7},
@@ -334,8 +425,7 @@
         };
       }
 
-      // --- LEVEL 4: DIVISIBILITY BY 25 ---
-      if (lvlIdx === 9) { // 4A
+      if (lvlIdx === 9) {
         let num = randInt(10, 89) * 100 + [0, 25, 50, 75, 15, 35, 60, 85][randInt(0, 7)];
         return {
           type: 'yesno',
@@ -344,7 +434,7 @@
           ans: (num % 25 === 0)
         };
       }
-      if (lvlIdx === 10) { // 4B
+      if (lvlIdx === 10) {
         let numbers = generateUniqueSet(4, n => n % 25 === 0, 100, 999);
         return {
           type: 'multiselect',
@@ -354,7 +444,7 @@
           ans: numbers.filter(n => n % 25 === 0)
         };
       }
-      if (lvlIdx === 11) { // 4C: Up to 200, divide by 25 ONCE
+      if (lvlIdx === 11) {
         const valid25Bases = [
           {n: 1, d: 2}, {n: 1, d: 3}, {n: 2, d: 3}, {n: 1, d: 4}, {n: 3, d: 4},
           {n: 1, d: 5}, {n: 2, d: 5}, {n: 3, d: 5}, {n: 4, d: 5}, {n: 1, d: 6},
@@ -374,8 +464,7 @@
         };
       }
 
-      // --- LEVEL 5: MIXED SINGLE SIMPLIFICATION ---
-      if (lvlIdx === 12) { // 5A
+      if (lvlIdx === 12) {
         let div = [2, 3, 5, 10, 25][randInt(0, 4)];
         let num = randInt(10, 99) * 10 + randInt(0, 9);
         let ans = (num % div === 0);
@@ -386,7 +475,7 @@
           ans: ans
         };
       }
-      if (lvlIdx === 13) { // 5B
+      if (lvlIdx === 13) {
         let div = [2, 3, 5, 10, 25][randInt(0, 4)];
         let numbers = generateUniqueSet(4, n => n % div === 0, 20, 300);
         return {
@@ -397,11 +486,10 @@
           ans: numbers.filter(n => n % div === 0)
         };
       }
-      if (lvlIdx === 14) { // 5C: Single simplification by 2, 3, 5, 10, or 25 ONCE
+      if (lvlIdx === 14) {
         let div = [2, 3, 5, 10, 25][randInt(0, 4)];
         const bases = [{n: 1, d: 2}, {n: 1, d: 3}, {n: 2, d: 3}, {n: 1, d: 4}, {n: 3, d: 4}, {n: 1, d: 7}, {n: 2, d: 7}, {n: 3, d: 7}, {n: 4, d: 7}, {n: 5, d: 7}];
         
-        // Pick base coprime to div
         let validBases = bases.filter(b => gcd(b.n, div) === 1 && gcd(b.d, div) === 1 && (b.d * div <= 250));
         let base = validBases[randInt(0, validBases.length - 1)];
 
@@ -416,8 +504,7 @@
         };
       }
 
-      // --- LEVEL 6: DOUBLE / MULTI-STEP SIMPLIFICATION ---
-      if (lvlIdx === 15) { // 6A: Composite divisibility (e.g. 6 = 2 & 3, 100 = 10 & 10)
+      if (lvlIdx === 15) {
         let types = [
           { comp: 6, desc: "both 2 and 3" },
           { comp: 100, desc: "100 (ends in 00)" }
@@ -433,7 +520,7 @@
           ans: ans
         };
       }
-      if (lvlIdx === 16) { // 6B
+      if (lvlIdx === 16) {
         let comp = [6, 100][randInt(0, 1)];
         let numbers = generateUniqueSet(4, n => n % comp === 0, 100, 900);
         return {
@@ -444,7 +531,7 @@
           ans: numbers.filter(n => n % comp === 0)
         };
       }
-      if (lvlIdx === 17) { // 6C: Double Reduction (e.g. 6/100 -> 3/50, 12/18 -> 2/3, 40/100 -> 2/5, 18/27 -> 2/3)
+      if (lvlIdx === 17) {
         const doublePairs = [
           { origN: 6, origD: 100, ansN: 3, ansD: 50 },
           { origN: 12, origD: 18, ansN: 2, ansD: 3 },
@@ -554,6 +641,7 @@
     }
 
     function loadNextQuestion() {
+      isProcessing = false;
       document.getElementById('feedback-banner').innerHTML = '';
       selectedCards = [];
       stepChoice2A = null;
@@ -632,106 +720,87 @@
           <button class="submit-btn" onclick="checkFraction()">Submit Fraction</button>
         `;
         document.getElementById('ans-num').focus();
-        inputArea.querySelectorAll('input').forEach(inp => {
-          inp.addEventListener('keypress', e => { if (e.key === 'Enter') checkFraction(); });
-        });
       }
     }
 
-    /* --- LEVEL 3B DRAG AND DROP RENDER & LOGIC --- */
-    function renderDragDrop3B(container) {
-      let poolHtml = `<div class="drag-cards-pool" id="cards-pool">`;
-      currentQ.numbers.forEach(num => {
-        let isPlaced = Object.values(dropZoneState).some(arr => arr.includes(num));
-        if (!isPlaced) {
-          poolHtml += `
-            <div class="drag-card-item" id="dcard-${num}" draggable="true" 
-                 ondragstart="dragStart(event, ${num})" onclick="handleCardTap(${num})">
-              ${num}
-            </div>`;
+    // --- ANSWER CHECKING LOGIC ---
+
+    function handleCorrect() {
+      if (isProcessing) return;
+      isProcessing = true;
+      streak++;
+      updateTracker();
+      
+      const banner = document.getElementById('feedback-banner');
+      banner.innerHTML = `<span class="txt-correct">✨ Correct! Nice job!</span>`;
+
+      if (streak >= 5) {
+        if (!completedSubLevels.includes(currentLvlIdx)) {
+          completedSubLevels.push(currentLvlIdx);
         }
-      });
-      poolHtml += `</div>`;
+        if (currentLvlIdx + 1 > maxUnlocked) {
+          maxUnlocked = currentLvlIdx + 1;
+        }
+        saveProgress(false);
 
-      let zonesHtml = `<div class="drop-zones-container">`;
-      const zones = [
-        { id: '5', label: '🟢 Divisible by 5 ONLY' },
-        { id: 'both', label: '🔵 BOTH 5 & 10' },
-        { id: 'neither', label: '🟡 Neither' }
-      ];
+        // Fire Confetti Animation instead of Alert
+        triggerConfetti();
 
-      zones.forEach(z => {
-        zonesHtml += `
-          <div class="drop-zone" id="zone-${z.id}" 
-               ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="drop(event, '${z.id}')" onclick="handleZoneTap('${z.id}')">
-            <div class="drop-zone-title">${z.label}</div>
-            <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:100%;">
-        `;
-        dropZoneState[z.id].forEach(num => {
-          zonesHtml += `
-            <div class="drag-card-item" onclick="event.stopPropagation(); removeCardFromZone(${num}, '${z.id}')">
-              ${num} ✕
-            </div>`;
-        });
-        zonesHtml += `</div></div>`;
-      });
-      zonesHtml += `</div>`;
-      zonesHtml += `<button class="submit-btn" onclick="checkDragDrop3B()">Submit Categories</button>`;
-
-      container.innerHTML = poolHtml + zonesHtml;
-    }
-
-    function dragStart(e, num) {
-      e.dataTransfer.setData("text/plain", num);
-    }
-    function allowDrop(e) {
-      e.preventDefault();
-      e.currentTarget.classList.add('drag-over');
-    }
-    function dragLeave(e) {
-      e.currentTarget.classList.remove('drag-over');
-    }
-    function drop(e, zoneId) {
-      e.preventDefault();
-      e.currentTarget.classList.remove('drag-over');
-      let num = parseInt(e.dataTransfer.getData("text/plain"));
-      placeCardInZone(num, zoneId);
-    }
-
-    function handleCardTap(num) {
-      activeTapCard = (activeTapCard === num) ? null : num;
-      currentQ.numbers.forEach(n => {
-        const el = document.getElementById(`dcard-${n}`);
-        if (el) el.classList.toggle('active-tap', n === activeTapCard);
-      });
-    }
-
-    function handleZoneTap(zoneId) {
-      if (activeTapCard !== null) {
-        placeCardInZone(activeTapCard, zoneId);
-        activeTapCard = null;
+        setTimeout(() => {
+          showMap();
+        }, 2500);
+      } else {
+        setTimeout(loadNextQuestion, 1200);
       }
     }
 
-    function placeCardInZone(num, targetZone) {
-      // Remove from any existing zone first
-      Object.keys(dropZoneState).forEach(z => {
-        dropZoneState[z] = dropZoneState[z].filter(n => n !== num);
-      });
-      dropZoneState[targetZone].push(num);
-      renderDragDrop3B(document.getElementById('input-area'));
+    function handleIncorrect(msg = "Not quite, try the next one!") {
+      if (isProcessing) return;
+      isProcessing = true;
+      streak = 0;
+      updateTracker();
+
+      const banner = document.getElementById('feedback-banner');
+      banner.innerHTML = `<span class="txt-incorrect">❌ ${msg}</span>`;
+
+      setTimeout(loadNextQuestion, 2200);
     }
 
-    function removeCardFromZone(num, zoneId) {
-      dropZoneState[zoneId] = dropZoneState[zoneId].filter(n => n !== num);
-      renderDragDrop3B(document.getElementById('input-area'));
+    function checkYesNo(userAns) {
+      if (userAns === currentQ.ans) handleCorrect();
+      else handleIncorrect(currentQ.ans ? "It is divisible!" : "It is not divisible.");
     }
 
-    /* --- CHECK ANSWERS --- */
     function setStepChoice2A(val) {
       stepChoice2A = val;
-      document.getElementById('btn-2a-yes').classList.toggle('active', val === true);
-      document.getElementById('btn-2a-no').classList.toggle('active', val === false);
+      const btnYes = document.getElementById('btn-2a-yes');
+      const btnNo = document.getElementById('btn-2a-no');
+      if (val) {
+        btnYes.classList.add('active');
+        btnNo.classList.remove('active');
+      } else {
+        btnNo.classList.add('active');
+        btnYes.classList.remove('active');
+      }
+    }
+
+    function checkTwoStep2A() {
+      const sumVal = parseInt(document.getElementById('ans-sum').value.trim());
+      if (isNaN(sumVal) || stepChoice2A === null) {
+        alert("Please enter the sum and select Yes or No.");
+        return;
+      }
+
+      if (sumVal === currentQ.ansSum && stepChoice2A === currentQ.ansDivisible) {
+        handleCorrect();
+      } else {
+        handleIncorrect(`Digit sum is ${currentQ.ansSum}, so it is ${currentQ.ansDivisible ? '' : 'NOT '}divisible by 3.`);
+      }
+    }
+
+    function checkChoice3(userAns) {
+      if (userAns === currentQ.ans) handleCorrect();
+      else handleIncorrect(`Incorrect choice for this number.`);
     }
 
     function toggleCard(num) {
@@ -745,50 +814,94 @@
       }
     }
 
-    function checkYesNo(userChoice) {
-      let isCorrect = (userChoice === currentQ.ans);
-      let msg = isCorrect ? 'Correct! ✓' : `Incorrect! ✗ Re-check the rule.`;
-      handleResult(isCorrect, msg);
-    }
-
-    function checkTwoStep2A() {
-      let sumVal = parseInt(document.getElementById('ans-sum').value.trim());
-      if (isNaN(sumVal) || stepChoice2A === null) {
-        document.getElementById('feedback-banner').innerHTML = '<span class="txt-incorrect">Please enter the digit sum AND select Yes/No.</span>';
-        return;
-      }
-
-      let sumCorrect = (sumVal === currentQ.ansSum);
-      let divCorrect = (stepChoice2A === currentQ.ansDivisible);
-
-      if (sumCorrect && divCorrect) {
-        handleResult(true, `Correct! ✓ Sum of digits is ${currentQ.ansSum}, so ${currentQ.num} is ${currentQ.ansDivisible ? '' : 'NOT '}divisible by 3.`);
-      } else if (!sumCorrect) {
-        handleResult(false, `Incorrect! ✗ Sum of digits for ${currentQ.num} is ${currentQ.ansSum}.`);
-      } else {
-        handleResult(false, `Incorrect! ✗ Since digit sum is ${currentQ.ansSum}, it is ${currentQ.ansDivisible ? '' : 'NOT '}divisible by 3.`);
-      }
-    }
-
-    function checkChoice3(userChoice) {
-      let isCorrect = (userChoice === currentQ.ans);
-      let msg = isCorrect ? 'Correct! ✓' : `Incorrect! ✗ Check the ending digit again.`;
-      handleResult(isCorrect, msg);
-    }
-
     function checkMultiSelect() {
-      const targetNums = [...currentQ.ans].sort((a,b) => a-b);
-      const userNums = [...selectedCards].sort((a,b) => a-b);
-      let isCorrect = JSON.stringify(targetNums) === JSON.stringify(userNums);
+      const correct = currentQ.ans;
+      const isMatch = selectedCards.length === correct.length && selectedCards.every(n => correct.includes(n));
+      if (isMatch) handleCorrect();
+      else handleIncorrect(`Look closely at the rules and test each number.`);
+    }
 
-      let msg = isCorrect ? 'Correct! ✓' : `Incorrect! ✗ Re-check each number carefully.`;
-      handleResult(isCorrect, msg);
+    function renderDragDrop3B(container) {
+      let html = `
+        <div id="drag-pool" class="drag-cards-pool"></div>
+        <div class="drop-zones-container">
+          <div class="drop-zone" id="zone-5" onclick="placeTapCard('5')">
+            <div class="drop-zone-title">Divisible by 5 ONLY</div>
+            <div class="zone-cards" id="cards-5"></div>
+          </div>
+          <div class="drop-zone" id="zone-both" onclick="placeTapCard('both')">
+            <div class="drop-zone-title">Divisible by BOTH 5 & 10</div>
+            <div class="zone-cards" id="cards-both"></div>
+          </div>
+          <div class="drop-zone" id="zone-neither" onclick="placeTapCard('neither')">
+            <div class="drop-zone-title">Neither</div>
+            <div class="zone-cards" id="cards-neither"></div>
+          </div>
+        </div>
+        <button class="submit-btn" onclick="checkDragDrop3B()">Submit Categories</button>
+      `;
+      container.innerHTML = html;
+      updateDragDropDisplay();
+    }
+
+    function updateDragDropDisplay() {
+      const poolContainer = document.getElementById('drag-pool');
+      if (!poolContainer) return;
+      poolContainer.innerHTML = '';
+
+      const allPlaced = [
+        ...dropZoneState['5'],
+        ...dropZoneState['both'],
+        ...dropZoneState['neither']
+      ];
+
+      currentQ.numbers.forEach(num => {
+        if (!allPlaced.includes(num)) {
+          const c = document.createElement('div');
+          c.className = `drag-card-item ${activeTapCard === num ? 'active-tap' : ''}`;
+          c.innerText = num;
+          c.onclick = (e) => {
+            e.stopPropagation();
+            activeTapCard = activeTapCard === num ? null : num;
+            updateDragDropDisplay();
+          };
+          poolContainer.appendChild(c);
+        }
+      });
+
+      ['5', 'both', 'neither'].forEach(zKey => {
+        const zoneCardsDiv = document.getElementById(`cards-${zKey}`);
+        zoneCardsDiv.innerHTML = '';
+        dropZoneState[zKey].forEach(num => {
+          const c = document.createElement('div');
+          c.className = 'drag-card-item';
+          c.style.margin = '4px 0';
+          c.innerText = num;
+          c.onclick = (e) => {
+            e.stopPropagation();
+            dropZoneState[zKey] = dropZoneState[zKey].filter(n => n !== num);
+            updateDragDropDisplay();
+          };
+          zoneCardsDiv.appendChild(c);
+        });
+      });
+    }
+
+    function placeTapCard(zoneKey) {
+      if (activeTapCard !== null) {
+        ['5', 'both', 'neither'].forEach(k => {
+          dropZoneState[k] = dropZoneState[k].filter(n => n !== activeTapCard);
+        });
+        dropZoneState[zoneKey].push(activeTapCard);
+        activeTapCard = null;
+        updateDragDropDisplay();
+      }
     }
 
     function checkDragDrop3B() {
-      let totalPlaced = Object.values(dropZoneState).reduce((acc, arr) => acc + arr.length, 0);
-      if (totalPlaced < 4) {
-        document.getElementById('feedback-banner').innerHTML = '<span class="txt-incorrect">Please place all 4 cards into drop zones!</span>';
+      const totalPlaced = dropZoneState['5'].length + dropZoneState['both'].length + dropZoneState['neither'].length;
+      if (totalPlaced < currentQ.numbers.length) {
+        alert("Please place all 4 numbers into a zone before submitting.");
         return;
       }
 
@@ -799,61 +912,29 @@
         });
       });
 
-      let msg = isCorrect ? 'Correct! ✓ All 4 numbers placed in their correct drop zones!' : 'Incorrect! ✗ Check ending digits again (5 ONLY vs 0 vs Neither).';
-      handleResult(isCorrect, msg);
+      if (isCorrect) handleCorrect();
+      else handleIncorrect("Check the ending digits: 5 = 5 only, 0 = both 5 & 10.");
     }
 
     function checkFraction() {
-      const numVal = parseInt(document.getElementById('ans-num').value.trim());
-      const denVal = parseInt(document.getElementById('ans-den').value.trim());
+      const numInput = parseInt(document.getElementById('ans-num').value.trim());
+      const denInput = parseInt(document.getElementById('ans-den').value.trim());
 
-      if (isNaN(numVal) || isNaN(denVal)) {
-        document.getElementById('feedback-banner').innerHTML = '<span class="txt-incorrect">Please enter numbers for both numerator and denominator.</span>';
+      if (isNaN(numInput) || isNaN(denInput)) {
+        alert("Please enter both numerator and denominator.");
         return;
       }
 
-      let isFullySimplified = (numVal === currentQ.ans.num && denVal === currentQ.ans.den);
-      let isEquivalent = (numVal * currentQ.origDen === denVal * currentQ.origNum);
-
-      if (isFullySimplified) {
-        handleResult(true, 'Correct! ✓ Completely simplified to lowest terms!');
-      } else if (isEquivalent) {
-        handleResult(false, `Good start! But ${numVal}/${denVal} can still be simplified further!`);
+      if (numInput === currentQ.ans.num && denInput === currentQ.ans.den) {
+        handleCorrect();
       } else {
-        handleResult(false, `Incorrect! ✗ Try dividing numerator & denominator carefully.`);
+        handleIncorrect(`Lowest terms are ${currentQ.ans.num}/${currentQ.ans.den}.`);
       }
     }
 
-    function handleResult(isCorrect, msg) {
-      const banner = document.getElementById('feedback-banner');
-
-      if (isCorrect) {
-        streak++;
-        updateTracker();
-        banner.innerHTML = `<span class="txt-correct">${msg}</span>`;
-
-        setTimeout(() => {
-          if (streak === 5) {
-            if (!completedSubLevels.includes(currentLvlIdx)) completedSubLevels.push(currentLvlIdx);
-            if (currentLvlIdx === maxUnlocked && maxUnlocked < subLevels.length - 1) maxUnlocked++;
-            banner.innerHTML = '<span class="txt-correct">Sub-Level Cleared! ⭐</span>';
-            setTimeout(showMap, 1200);
-          } else {
-            loadNextQuestion();
-          }
-        }, 800);
-      } else {
-        streak = 0;
-        updateTracker();
-        banner.innerHTML = `<span class="txt-incorrect">${msg} Generating a new question...</span>`;
-
-        setTimeout(() => {
-          loadNextQuestion();
-        }, 1800);
-      }
-    }
-
-    renderMap();
+    // Initialize application on launch
+    loadProgress();
+    showMap();
   </script>
 </body>
 </html>
