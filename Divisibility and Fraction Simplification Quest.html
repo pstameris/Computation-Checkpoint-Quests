@@ -84,13 +84,14 @@
     .card-item.selected { border-color: var(--gold); background: rgba(250, 204, 21, 0.15); box-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
 
     /* Drag and Drop Zone CSS */
-    .drag-cards-pool { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 550px; min-height: 60px; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 2px dashed var(--border); border-radius: 12px; margin-bottom: 15px; }
+    .drag-cards-pool { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 550px; min-height: 65px; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 2px dashed var(--border); border-radius: 12px; margin-bottom: 15px; }
     .drag-card-item { background: var(--card-bg); border: 2px solid var(--accent); color: var(--gold); font-size: 1.3rem; font-weight: bold; padding: 10px 18px; border-radius: 10px; cursor: grab; user-select: none; transition: transform 0.2s, border-color 0.2s; }
     .drag-card-item:active { cursor: grabbing; transform: scale(1.05); }
     .drag-card-item.active-tap { border-color: var(--gold); box-shadow: 0 0 12px var(--gold); }
 
-    .drop-zones-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; width: 100%; max-width: 650px; }
+    .drop-zones-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; width: 100%; max-width: 650px; }
     .drop-zone { background: var(--bg); border: 2px dashed var(--border); border-radius: 14px; padding: 12px 8px; min-height: 120px; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; cursor: pointer; }
+    .drop-zone.drag-over { border-color: var(--gold); background: rgba(250, 204, 21, 0.08); }
     .drop-zone-title { font-size: 0.85rem; font-weight: bold; color: var(--accent); margin-bottom: 8px; text-align: center; }
 
     /* Fraction Display and Input */
@@ -200,17 +201,12 @@
     // Drag & Drop State
     let activeTapCard = null;
     let dropZoneState = { '5': [], 'both': [], 'neither': [] };
+    let draggedVal = null;
 
-    // Storage Management
     function saveProgress(showAlert = true) {
-      const payload = {
-        maxUnlocked: maxUnlocked,
-        completedSubLevels: completedSubLevels
-      };
+      const payload = { maxUnlocked, completedSubLevels };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      if (showAlert) {
-        alert('Progress saved successfully!');
-      }
+      if (showAlert) alert('Progress saved successfully!');
     }
 
     function loadProgress() {
@@ -226,7 +222,6 @@
       }
     }
 
-    // Canvas Confetti Animation Engine
     function triggerConfetti() {
       const canvas = document.getElementById('confetti-canvas');
       const ctx = canvas.getContext('2d');
@@ -279,7 +274,6 @@
     function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
     function digitSum(n) { return String(n).split('').reduce((sum, d) => sum + parseInt(d), 0); }
 
-    // Master Question Generator
     function buildQuestion(lvlIdx) {
       if (lvlIdx === 0) {
         let num = randInt(100, 999);
@@ -381,13 +375,26 @@
           ans: ansText
         };
       }
+      
+      // LEVEL 3B: Guaranteed 4 UNIQUE numbers and drag & drop support
       if (lvlIdx === 7) {
-        let n1 = randInt(10, 89) * 10 + 5;
-        let n2 = randInt(10, 89) * 10;
-        let n3 = randInt(100, 899); while(n3 % 5 === 0) n3++;
-        let n4 = randInt(100, 899);
+        let numSet = new Set();
+        
+        // Ensure at least 1 ends in 5, 1 ends in 0, 1 neither
+        numSet.add(randInt(10, 89) * 10 + 5);
+        numSet.add(randInt(10, 89) * 10);
+        
+        let nNeither;
+        do { nNeither = randInt(100, 899); } while (nNeither % 5 === 0);
+        numSet.add(nNeither);
 
-        let numbers = [n1, n2, n3, n4].sort(() => Math.random() - 0.5);
+        // Add 4th distinct number
+        while (numSet.size < 4) {
+          let cand = randInt(100, 899);
+          numSet.add(cand);
+        }
+
+        let numbers = Array.from(numSet).sort(() => Math.random() - 0.5);
 
         let correctMap = {};
         numbers.forEach(n => {
@@ -398,12 +405,13 @@
 
         return {
           type: 'dragDrop3B',
-          rule: "💡 <b>Categorization:</b> Tap a card, then tap a target zone!",
+          rule: "💡 <b>Categorization:</b> Drag and drop each card into a zone (or tap a card then tap a zone)!",
           prompt: "Place all 4 numbers into their correct zones:",
           numbers: numbers,
           ansMap: correctMap
         };
       }
+      
       if (lvlIdx === 8) {
         const basePool3C = [
           {n: 1, d: 2}, {n: 1, d: 3}, {n: 2, d: 3}, {n: 1, d: 4}, {n: 3, d: 4},
@@ -681,258 +689,273 @@
       } else if (currentQ.type === 'twoStep2A') {
         inputArea.innerHTML = `
           <div style="display:flex; flex-direction:column; gap:12px; align-items:center; width:100%;">
-            <div><b>Step 1:</b> What is the sum of the digits?</div>
-            <input type="text" id="ans-sum" class="single-input" placeholder="Digit Sum" autocomplete="off">
-            <div style="margin-top:6px;"><b>Step 2:</b> Is ${currentQ.num} divisible by 3?</div>
+            <div><b>Step 1:</b> What is the digit sum?</div>
+            <input type="number" id="sum-input" class="single-input" placeholder="Sum">
+            <div><b>Step 2:</b> Is it divisible by 3?</div>
             <div class="choice-group">
-              <button class="btn-choice" id="btn-2a-yes" onclick="setStepChoice2A(true)">Yes</button>
-              <button class="btn-choice" id="btn-2a-no" onclick="setStepChoice2A(false)">No</button>
+              <button id="btn-2a-yes" class="btn-choice" onclick="setStepChoice2A(true)">Yes</button>
+              <button id="btn-2a-no" class="btn-choice" onclick="setStepChoice2A(false)">No</button>
             </div>
-            <button class="submit-btn" onclick="checkTwoStep2A()">Submit Answer</button>
+            <button class="submit-btn" onclick="checkTwoStep2A()">Check Answer</button>
           </div>
         `;
-        document.getElementById('ans-sum').focus();
+      } else if (currentQ.type === 'multiselect') {
+        let cardsHtml = '<div class="cards-grid">';
+        currentQ.numbers.forEach(n => {
+          cardsHtml += `<div class="card-item" id="card-${n}" onclick="toggleCard(${n})">${n}</div>`;
+        });
+        cardsHtml += '</div><button class="submit-btn" onclick="checkMultiSelect()">Submit Answer</button>';
+        inputArea.innerHTML = cardsHtml;
       } else if (currentQ.type === 'choice3') {
         inputArea.innerHTML = `
           <div class="choice-group">
             <button class="btn-choice" onclick="checkChoice3('5')">Divisible by 5 ONLY</button>
-            <button class="btn-choice" onclick="checkChoice3('both')">Divisible by BOTH 5 & 10</button>
+            <button class="btn-choice" onclick="checkChoice3('both')">Divisible by BOTH (5 & 10)</button>
             <button class="btn-choice" onclick="checkChoice3('neither')">Neither</button>
           </div>
         `;
-      } else if (currentQ.type === 'multiselect') {
-        let gridHtml = `<div class="cards-grid">`;
-        currentQ.numbers.forEach(num => {
-          gridHtml += `<div class="card-item" id="card-${num}" onclick="toggleCard(${num})">${num}</div>`;
-        });
-        gridHtml += `</div>`;
-        gridHtml += `<button class="submit-btn" onclick="checkMultiSelect()">Submit Answer</button>`;
-        inputArea.innerHTML = gridHtml;
       } else if (currentQ.type === 'dragDrop3B') {
-        renderDragDrop3B(inputArea);
+        render3BUI();
       } else if (currentQ.type === 'fraction') {
         inputArea.innerHTML = `
           <div class="fraction-input">
-            <input type="text" id="ans-num" placeholder="Num" autocomplete="off">
+            <input type="number" id="frac-num" placeholder="Top">
             <div class="fraction-bar"></div>
-            <input type="text" id="ans-den" placeholder="Den" autocomplete="off">
+            <input type="number" id="frac-den" placeholder="Bottom">
           </div>
-          <button class="submit-btn" onclick="checkFraction()">Submit Fraction</button>
+          <button class="submit-btn" onclick="checkFraction()">Submit Answer</button>
         `;
-        document.getElementById('ans-num').focus();
       }
     }
 
-    // --- ANSWER CHECKING LOGIC ---
+    // Level 3B Render Drag & Drop UI
+    function render3BUI() {
+      const container = document.getElementById('input-area');
+      if (!container || !currentQ || currentQ.type !== 'dragDrop3B') return;
 
-    function handleCorrect() {
-      if (isProcessing) return;
-      isProcessing = true;
-      streak++;
-      updateTracker();
-      
-      const banner = document.getElementById('feedback-banner');
-      banner.innerHTML = `<span class="txt-correct">✨ Correct! Nice job!</span>`;
+      let remainingCards = currentQ.numbers.filter(n => 
+        !dropZoneState['5'].includes(n) && 
+        !dropZoneState['both'].includes(n) && 
+        !dropZoneState['neither'].includes(n)
+      );
 
-      if (streak >= 5) {
-        if (!completedSubLevels.includes(currentLvlIdx)) {
-          completedSubLevels.push(currentLvlIdx);
-        }
-        if (currentLvlIdx + 1 > maxUnlocked) {
-          maxUnlocked = currentLvlIdx + 1;
-        }
-        saveProgress(false);
-
-        // Fire Confetti Animation instead of Alert
-        triggerConfetti();
-
-        setTimeout(() => {
-          showMap();
-        }, 2500);
+      let poolHtml = `<div class="drag-cards-pool">`;
+      if (remainingCards.length === 0) {
+        poolHtml += `<span style="color:var(--text-muted); font-size:0.9rem; align-self:center;">All 4 cards placed! Tap any card to remove it.</span>`;
       } else {
-        setTimeout(loadNextQuestion, 1200);
+        remainingCards.forEach(n => {
+          let isActive = (activeTapCard === n) ? 'active-tap' : '';
+          poolHtml += `<div class="drag-card-item ${isActive}" draggable="true" ondragstart="handleDragStart(event, ${n})" onclick="handleTapCard(${n})">${n}</div>`;
+        });
+      }
+      poolHtml += `</div>`;
+
+      let zones = [
+        { key: '5', label: 'Divisible by 5 ONLY' },
+        { key: 'both', label: 'Divisible by BOTH (5 & 10)' },
+        { key: 'neither', label: 'Neither' }
+      ];
+
+      let zonesHtml = `<div class="drop-zones-container">`;
+      zones.forEach(z => {
+        zonesHtml += `
+          <div class="drop-zone" 
+               ondragover="handleDragOver(event)" 
+               ondragleave="handleDragLeave(event)" 
+               ondrop="handleDrop(event, '${z.key}')" 
+               onclick="handleZoneTap('${z.key}')">
+            <div class="drop-zone-title">${z.label}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:100%;">
+              ${dropZoneState[z.key].map(n => `<div class="drag-card-item" onclick="returnCardToPool(${n}, event)">${n}</div>`).join('')}
+            </div>
+          </div>
+        `;
+      });
+      zonesHtml += `</div>`;
+
+      let placedCount = currentQ.numbers.length - remainingCards.length;
+      let submitBtnHtml = placedCount === currentQ.numbers.length 
+        ? `<button class="submit-btn" onclick="check3B()">Submit Answer</button>`
+        : `<button class="submit-btn" style="opacity:0.5; cursor:not-allowed;" disabled>Place all 4 numbers (${placedCount}/4)</button>`;
+
+      container.innerHTML = poolHtml + zonesHtml + submitBtnHtml;
+    }
+
+    // Drag and Drop Event Handlers
+    function handleDragStart(ev, val) {
+      draggedVal = val;
+      ev.dataTransfer.setData("text/plain", val);
+    }
+
+    function handleDragOver(ev) {
+      ev.preventDefault();
+      ev.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(ev) {
+      ev.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(ev, zoneKey) {
+      ev.preventDefault();
+      ev.currentTarget.classList.remove('drag-over');
+      let valStr = ev.dataTransfer.getData("text/plain");
+      let val = valStr ? parseInt(valStr) : draggedVal;
+      if (val) {
+        placeCardInZone(val, zoneKey);
+        draggedVal = null;
       }
     }
 
-    function handleIncorrect(msg = "Not quite, try the next one!") {
-      if (isProcessing) return;
-      isProcessing = true;
-      streak = 0;
-      updateTracker();
-
-      const banner = document.getElementById('feedback-banner');
-      banner.innerHTML = `<span class="txt-incorrect">❌ ${msg}</span>`;
-
-      setTimeout(loadNextQuestion, 2200);
+    function handleTapCard(val) {
+      activeTapCard = (activeTapCard === val) ? null : val;
+      render3BUI();
     }
 
+    function handleZoneTap(zoneKey) {
+      if (activeTapCard !== null) {
+        placeCardInZone(activeTapCard, zoneKey);
+        activeTapCard = null;
+      }
+    }
+
+    function placeCardInZone(val, zoneKey) {
+      Object.keys(dropZoneState).forEach(k => {
+        dropZoneState[k] = dropZoneState[k].filter(item => item !== val);
+      });
+      dropZoneState[zoneKey].push(val);
+      render3BUI();
+    }
+
+    function returnCardToPool(val, ev) {
+      if (ev) ev.stopPropagation();
+      Object.keys(dropZoneState).forEach(k => {
+        dropZoneState[k] = dropZoneState[k].filter(item => item !== val);
+      });
+      if (activeTapCard === val) activeTapCard = null;
+      render3BUI();
+    }
+
+    // Answer Checking Logic
     function checkYesNo(userAns) {
+      if (isProcessing) return;
       if (userAns === currentQ.ans) handleCorrect();
-      else handleIncorrect(currentQ.ans ? "It is divisible!" : "It is not divisible.");
+      else handleIncorrect(`Incorrect. ${currentQ.ans ? 'It IS divisible.' : 'It is NOT divisible.'}`);
     }
 
     function setStepChoice2A(val) {
       stepChoice2A = val;
-      const btnYes = document.getElementById('btn-2a-yes');
-      const btnNo = document.getElementById('btn-2a-no');
-      if (val) {
-        btnYes.classList.add('active');
-        btnNo.classList.remove('active');
-      } else {
-        btnNo.classList.add('active');
-        btnYes.classList.remove('active');
-      }
+      document.getElementById('btn-2a-yes').classList.toggle('active', val === true);
+      document.getElementById('btn-2a-no').classList.toggle('active', val === false);
     }
 
     function checkTwoStep2A() {
-      const sumVal = parseInt(document.getElementById('ans-sum').value.trim());
+      if (isProcessing) return;
+      const sumVal = parseInt(document.getElementById('sum-input').value);
       if (isNaN(sumVal) || stepChoice2A === null) {
-        alert("Please enter the sum and select Yes or No.");
+        alert("Please answer both Step 1 and Step 2!");
         return;
       }
 
       if (sumVal === currentQ.ansSum && stepChoice2A === currentQ.ansDivisible) {
         handleCorrect();
       } else {
-        handleIncorrect(`Digit sum is ${currentQ.ansSum}, so it is ${currentQ.ansDivisible ? '' : 'NOT '}divisible by 3.`);
+        handleIncorrect(`Incorrect. Digit sum is ${currentQ.ansSum}, which is ${currentQ.ansDivisible ? '' : 'NOT '}divisible by 3.`);
       }
     }
 
-    function checkChoice3(userAns) {
-      if (userAns === currentQ.ans) handleCorrect();
-      else handleIncorrect(`Incorrect choice for this number.`);
-    }
+    function toggleCard(n) {
+      const idx = selectedCards.indexOf(n);
+      if (idx > -1) selectedCards.splice(idx, 1);
+      else selectedCards.push(n);
 
-    function toggleCard(num) {
-      const card = document.getElementById(`card-${num}`);
-      if (selectedCards.includes(num)) {
-        selectedCards = selectedCards.filter(n => n !== num);
-        card.classList.remove('selected');
-      } else {
-        selectedCards.push(num);
-        card.classList.add('selected');
-      }
+      document.getElementById(`card-${n}`).classList.toggle('selected', selectedCards.includes(n));
     }
 
     function checkMultiSelect() {
-      const correct = currentQ.ans;
-      const isMatch = selectedCards.length === correct.length && selectedCards.every(n => correct.includes(n));
-      if (isMatch) handleCorrect();
-      else handleIncorrect(`Look closely at the rules and test each number.`);
+      if (isProcessing) return;
+      let userSorted = [...selectedCards].sort((a,b) => a - b);
+      let ansSorted = [...currentQ.ans].sort((a,b) => a - b);
+
+      if (JSON.stringify(userSorted) === JSON.stringify(ansSorted)) {
+        handleCorrect();
+      } else {
+        handleIncorrect(`Not quite! Correct numbers were: ${ansSorted.join(', ') || 'None'}.`);
+      }
     }
 
-    function renderDragDrop3B(container) {
-      let html = `
-        <div id="drag-pool" class="drag-cards-pool"></div>
-        <div class="drop-zones-container">
-          <div class="drop-zone" id="zone-5" onclick="placeTapCard('5')">
-            <div class="drop-zone-title">Divisible by 5 ONLY</div>
-            <div class="zone-cards" id="cards-5"></div>
-          </div>
-          <div class="drop-zone" id="zone-both" onclick="placeTapCard('both')">
-            <div class="drop-zone-title">Divisible by BOTH 5 & 10</div>
-            <div class="zone-cards" id="cards-both"></div>
-          </div>
-          <div class="drop-zone" id="zone-neither" onclick="placeTapCard('neither')">
-            <div class="drop-zone-title">Neither</div>
-            <div class="zone-cards" id="cards-neither"></div>
-          </div>
-        </div>
-        <button class="submit-btn" onclick="checkDragDrop3B()">Submit Categories</button>
-      `;
-      container.innerHTML = html;
-      updateDragDropDisplay();
+    function checkChoice3(userChoice) {
+      if (isProcessing) return;
+      if (userChoice === currentQ.ans) handleCorrect();
+      else handleIncorrect("Incorrect category! Remember: Ends in 5 ONLY -> 5 ONLY, Ends in 0 -> BOTH, Else -> Neither.");
     }
 
-    function updateDragDropDisplay() {
-      const poolContainer = document.getElementById('drag-pool');
-      if (!poolContainer) return;
-      poolContainer.innerHTML = '';
-
-      const allPlaced = [
-        ...dropZoneState['5'],
-        ...dropZoneState['both'],
-        ...dropZoneState['neither']
-      ];
-
-      currentQ.numbers.forEach(num => {
-        if (!allPlaced.includes(num)) {
-          const c = document.createElement('div');
-          c.className = `drag-card-item ${activeTapCard === num ? 'active-tap' : ''}`;
-          c.innerText = num;
-          c.onclick = (e) => {
-            e.stopPropagation();
-            activeTapCard = activeTapCard === num ? null : num;
-            updateDragDropDisplay();
-          };
-          poolContainer.appendChild(c);
+    function check3B() {
+      if (isProcessing) return;
+      let isCorrect = true;
+      currentQ.numbers.forEach(n => {
+        let targetZone = currentQ.ansMap[n];
+        if (!dropZoneState[targetZone].includes(n)) {
+          isCorrect = false;
         }
       });
 
-      ['5', 'both', 'neither'].forEach(zKey => {
-        const zoneCardsDiv = document.getElementById(`cards-${zKey}`);
-        zoneCardsDiv.innerHTML = '';
-        dropZoneState[zKey].forEach(num => {
-          const c = document.createElement('div');
-          c.className = 'drag-card-item';
-          c.style.margin = '4px 0';
-          c.innerText = num;
-          c.onclick = (e) => {
-            e.stopPropagation();
-            dropZoneState[zKey] = dropZoneState[zKey].filter(n => n !== num);
-            updateDragDropDisplay();
-          };
-          zoneCardsDiv.appendChild(c);
-        });
-      });
-    }
-
-    function placeTapCard(zoneKey) {
-      if (activeTapCard !== null) {
-        ['5', 'both', 'neither'].forEach(k => {
-          dropZoneState[k] = dropZoneState[k].filter(n => n !== activeTapCard);
-        });
-        dropZoneState[zoneKey].push(activeTapCard);
-        activeTapCard = null;
-        updateDragDropDisplay();
-      }
-    }
-
-    function checkDragDrop3B() {
-      const totalPlaced = dropZoneState['5'].length + dropZoneState['both'].length + dropZoneState['neither'].length;
-      if (totalPlaced < currentQ.numbers.length) {
-        alert("Please place all 4 numbers into a zone before submitting.");
-        return;
-      }
-
-      let isCorrect = true;
-      Object.keys(dropZoneState).forEach(zone => {
-        dropZoneState[zone].forEach(num => {
-          if (currentQ.ansMap[num] !== zone) isCorrect = false;
-        });
-      });
-
       if (isCorrect) handleCorrect();
-      else handleIncorrect("Check the ending digits: 5 = 5 only, 0 = both 5 & 10.");
+      else handleIncorrect("One or more numbers are in the wrong zone. Check their last digits!");
     }
 
     function checkFraction() {
-      const numInput = parseInt(document.getElementById('ans-num').value.trim());
-      const denInput = parseInt(document.getElementById('ans-den').value.trim());
+      if (isProcessing) return;
+      const userNum = parseInt(document.getElementById('frac-num').value);
+      const userDen = parseInt(document.getElementById('frac-den').value);
 
-      if (isNaN(numInput) || isNaN(denInput)) {
-        alert("Please enter both numerator and denominator.");
+      if (isNaN(userNum) || isNaN(userDen)) {
+        alert("Please fill in both top and bottom numbers!");
         return;
       }
 
-      if (numInput === currentQ.ans.num && denInput === currentQ.ans.den) {
+      if (userNum === currentQ.ans.num && userDen === currentQ.ans.den) {
         handleCorrect();
       } else {
-        handleIncorrect(`Lowest terms are ${currentQ.ans.num}/${currentQ.ans.den}.`);
+        handleIncorrect(`Incorrect. The simplified fraction is ${currentQ.ans.num}/${currentQ.ans.den}.`);
       }
     }
 
-    // Initialize application on launch
+    function handleCorrect() {
+      isProcessing = true;
+      streak++;
+      updateTracker();
+      const banner = document.getElementById('feedback-banner');
+      banner.className = 'feedback-banner txt-correct';
+      banner.innerText = '✨ Great job! Correct!';
+
+      if (streak === 5) {
+        triggerConfetti();
+        banner.innerText = `🎉 Level ${subLevels[currentLvlIdx].id} Cleared!`;
+        if (!completedSubLevels.includes(currentLvlIdx)) {
+          completedSubLevels.push(currentLvlIdx);
+        }
+        if (currentLvlIdx + 1 > maxUnlocked && currentLvlIdx + 1 < subLevels.length) {
+          maxUnlocked = currentLvlIdx + 1;
+        }
+        saveProgress(false);
+        setTimeout(() => { showMap(); }, 2200);
+      } else {
+        setTimeout(() => { loadNextQuestion(); }, 1200);
+      }
+    }
+
+    function handleIncorrect(msg) {
+      isProcessing = true;
+      streak = 0;
+      updateTracker();
+      const banner = document.getElementById('feedback-banner');
+      banner.className = 'feedback-banner txt-incorrect';
+      banner.innerText = msg;
+      setTimeout(() => { loadNextQuestion(); }, 2200);
+    }
+
+    // Startup
     loadProgress();
     showMap();
   </script>
