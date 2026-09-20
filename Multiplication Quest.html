@@ -4,513 +4,1426 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2 Digit by 2 Digit Multiplication Quest</title>
+  
   <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --success-hover: #059669;
+      --error: #ef4444;
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.35);
+      --border: #334155;
+      --box-bg: #0f172a;
+      --box-focus: #312e81;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
     body {
-      background-color: #0f172a;
-      color: #f8fafc;
-      min-height: 100vh;
+      background-color: var(--bg-color);
+      color: var(--text-main);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
-      position: relative;
-      overflow-x: hidden;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 800px;
     }
 
     h1 {
-      font-size: 2.25rem;
-      font-weight: 800;
       color: #818cf8;
-      margin-bottom: 0.5rem;
-      text-align: center;
+      font-size: 2.2rem;
+      margin-bottom: 8px;
     }
 
-    p.subtitle {
-      color: #94a3b8;
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-
-    .card {
-      background: #1e293b;
-      border-radius: 12px;
-      border: 1px solid #334155;
-      padding: 1.5rem;
-      width: 100%;
-      max-width: 600px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-    }
-
-    .toolbar {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .btn {
-      border: none;
-      padding: 0.6rem 1.2rem;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    .btn-save {
-      background-color: #10b981;
-      color: white;
-    }
-
-    .btn-save:hover {
-      background-color: #059669;
-    }
-
-    .btn-reset {
-      background-color: #ef4444;
-      color: white;
-    }
-
-    .btn-reset:hover {
-      background-color: #dc2626;
-    }
-
-    .btn-primary {
-      background-color: #6366f1;
-      color: white;
-      width: 100%;
-      padding: 0.75rem;
+    .subtitle {
+      color: var(--text-muted);
       font-size: 1rem;
-      justify-content: center;
-      margin-top: 1rem;
     }
 
-    .btn-primary:hover {
-      background-color: #4f46e5;
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    .btn-secondary {
-      background-color: #475569;
-      color: white;
+    .menu-actions {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      justify-content: flex-end;
+      margin-bottom: 16px;
     }
 
-    .btn-secondary:hover {
-      background-color: #334155;
+    .mastery-banner {
+      width: 100%;
+      background: linear-gradient(135deg, #065f46 0%, #047857 50%, #1e1b4b 100%);
+      border: 2px solid #34d399;
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: 0 0 25px rgba(52, 211, 153, 0.35);
+      animation: pulseGlow 3s infinite alternate;
     }
 
-    .level-grid {
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 15px rgba(52, 211, 153, 0.25); }
+      100% { box-shadow: 0 0 30px rgba(52, 211, 153, 0.5); }
+    }
+
+    .mastery-banner h2 {
+      color: #fef08a;
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .mastery-banner p {
+      color: #a7f3d0;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .menu-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 15px;
+      width: 100%;
+      margin-top: 10px;
     }
 
     .level-card {
-      background: #334155;
-      border: 2px solid #475569;
-      border-radius: 8px;
-      padding: 1.25rem 1rem;
+      background: #0f172a;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 115px;
+      position: relative;
     }
 
     .level-card:hover:not(.locked) {
-      border-color: #818cf8;
+      border-color: var(--primary);
       transform: translateY(-2px);
-    }
-
-    .level-card.locked {
-      opacity: 0.4;
-      cursor: not-allowed;
+      box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.25);
     }
 
     .level-card.completed {
       border-color: #10b981;
-      background: #064e3b;
+      background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
     }
 
-    .level-title {
-      font-weight: bold;
-      font-size: 1.1rem;
-      margin-bottom: 0.25rem;
+    .level-card.completed:hover {
+      border-color: #34d399;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
     }
 
-    .level-status {
-      font-size: 0.8rem;
-      color: #cbd5e1;
+    .level-card.locked {
+      opacity: 0.55;
+      cursor: not-allowed;
+      background: #090d16;
+      border-color: #1e293b;
     }
 
-    .game-container {
-      display: none;
-    }
-
-    .game-header {
+    .level-card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: 8px;
     }
 
-    .problem-display {
-      font-size: 2.75rem;
-      font-weight: 700;
-      text-align: center;
-      margin: 1.5rem 0;
-      letter-spacing: 2px;
-      color: #f1f5f9;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    input[type="number"] {
-      width: 180px;
-      padding: 0.75rem;
-      font-size: 1.5rem;
-      text-align: center;
-      border-radius: 8px;
-      border: 2px solid #475569;
-      background: #0f172a;
-      color: white;
-      outline: none;
-    }
-
-    input[type="number"]:focus {
-      border-color: #818cf8;
-    }
-
-    .feedback {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      border-radius: 6px;
-      text-align: center;
+    .level-number {
       font-weight: bold;
-      display: none;
+      color: #818cf8;
+      font-size: 1.1rem;
     }
 
-    .feedback.correct {
-      background: #065f46;
+    .lock-icon {
+      font-size: 1.1rem;
+    }
+
+    .level-card-title {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .level-card-stars {
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+
+    .badge-completed {
+      display: inline-block;
+      background: #059669;
+      color: #ecfdf5;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .nav-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-back:hover {
+      color: var(--text-main);
+      border-color: var(--primary);
+    }
+
+    .streak-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #312e81;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .streak-title {
+      font-weight: bold;
+      color: #c7d2fe;
+      font-size: 0.95rem;
+    }
+
+    .stars {
+      display: flex;
+      gap: 5px;
+    }
+
+    .star {
+      font-size: 1.2rem;
+      color: #475569;
+      transition: transform 0.2s;
+    }
+
+    .star.filled {
+      color: var(--accent);
+      transform: scale(1.15);
+    }
+
+    .level-header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .level-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #818cf8;
+    }
+
+    .level-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .paper-note {
+      background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%);
+      border: 2px solid #a855f7;
+      box-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
+      border-radius: 14px;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      width: 100%;
+      text-align: center;
+      color: #f3e8ff;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .scaffold-hint {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      border: 2px solid var(--accent);
+      box-shadow: 0 8px 20px var(--accent-glow);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .scaffold-hint-title {
+      color: #fbbf24;
+      font-size: 1.15rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .scaffold-hint-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+
+    .scaffold-badge {
+      background: #0f172a;
+      border: 1px solid #6366f1;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #a5b4fc;
+    }
+
+    .scaffold-badge span.highlight {
+      color: #38bdf8;
+      font-weight: 900;
+    }
+
+    .scaffold-instruction {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    .math-grid {
+      display: grid;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 2.2rem;
+      font-weight: bold;
+      user-select: none;
+      margin: 10px 0 25px 0;
+    }
+
+    .digit-cell {
+      width: 52px;
+      height: 56px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-main);
+    }
+
+    .digit-input {
+      width: 52px;
+      height: 56px;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      font-family: inherit;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--box-bg);
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .digit-input:focus {
+      border-color: #818cf8;
+      background: var(--box-focus);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4);
+    }
+
+    .digit-input.carry-box {
+      width: 44px;
+      height: 44px;
+      font-size: 1.3rem;
+      border: 2px dashed #6366f1;
+      background: #1e1b4b;
+      color: #a5b4fc;
+    }
+
+    .digit-input.carry-box::placeholder {
+      color: #475569;
+      font-size: 0.85rem;
+    }
+
+    .digit-input.correct {
+      border-color: var(--success) !important;
+      background-color: #064e3b !important;
       color: #a7f3d0;
     }
 
-    .feedback.incorrect {
-      background: #991b1b;
+    .digit-input.incorrect {
+      border-color: var(--error) !important;
+      background-color: #7f1d1d !important;
       color: #fecaca;
+      animation: shake 0.3s;
     }
 
-    .progress-bar-container {
+    .single-answer-input {
+      width: 220px;
+      height: 60px;
+      font-size: 2.2rem;
+      text-align: center;
+      border: 3px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      font-weight: bold;
+      background: var(--box-bg);
+      color: var(--text-main);
+    }
+
+    .single-answer-input:focus {
+      border-color: #818cf8;
+      background: var(--box-focus);
+    }
+
+    .math-line {
+      grid-column: 1 / -1;
+      height: 3px;
+      background-color: #64748b;
+      border-radius: 2px;
+      margin: 4px 0;
+    }
+
+    .operator-cell {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #818cf8;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
       width: 100%;
-      background-color: #334155;
-      border-radius: 8px;
-      height: 12px;
-      overflow: hidden;
-      margin-top: 1rem;
+      justify-content: center;
+      margin-top: 10px;
     }
 
-    .progress-bar {
-      width: 0%;
-      height: 100%;
-      background-color: #10b981;
-      transition: width 0.3s ease;
+    .btn {
+      padding: 12px 24px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: #334155;
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background-color: #475569;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: var(--success-hover);
+    }
+
+    .btn-danger {
+      background-color: #dc2626;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #b91c1c;
+    }
+
+    .feedback {
+      margin-top: 18px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      min-height: 32px;
+      text-align: center;
+    }
+
+    .feedback.success {
+      color: var(--success);
+    }
+
+    .feedback.error {
+      color: var(--error);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 100;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 30px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 440px;
+      width: 90%;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+    }
+
+    .modal h2 {
+      color: var(--text-main);
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .modal p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e1b4b;
+      border: 1px solid var(--primary);
+      color: #e0e7ff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
 
     canvas#confetti {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100vw;
       height: 100vh;
       pointer-events: none;
-      z-index: 999;
+      z-index: 99;
     }
   </style>
 </head>
 <body>
+
   <canvas id="confetti"></canvas>
 
-  <h1>2 Digit by 2 Digit Multiplication Quest</h1>
-  <p class="subtitle" id="subtitle">Select a level to begin your quest!</p>
+  <header>
+    <h1>2 Digit by 2 Digit Multiplication Quest</h1>
+    <div class="subtitle" id="headerSubtitle">Select a level to begin your quest!</div>
+  </header>
 
-  <div class="card">
-    <div class="toolbar">
-      <button class="btn btn-save" onclick="saveProgress()">💾 Save Progress</button>
-      <button class="btn btn-reset" onclick="resetProgress()">🔄 Reset Progress</button>
+  <!-- MENU VIEW -->
+  <main class="main-card" id="menuView">
+    <div class="menu-actions">
+      <button class="btn btn-sm btn-success" onclick="saveProgress()">💾 Save Progress</button>
+      <button class="btn btn-sm btn-danger" onclick="promptResetProgress()">🔄 Reset Progress</button>
     </div>
 
-    <!-- LEVEL MENU -->
-    <div id="menu-view">
-      <div class="level-grid" id="level-grid"></div>
+    <!-- Multiplication Mastery Banner -->
+    <div id="masteryBanner" class="mastery-banner" style="display: none;">
+      <h2>🏆 CONGRATULATIONS! You have achieved MULTIPLICATION MASTERY! 🏆</h2>
+      <p>You have earned 5 stars on every single level! Incredible work!</p>
     </div>
 
-    <!-- GAMEPLAY AREA -->
-    <div id="game-view" class="game-container">
-      <div class="game-header">
-        <button class="btn btn-secondary" onclick="showMenu()">← Back to Menu</button>
-        <span id="level-indicator" style="font-weight: bold; color: #818cf8;">Level 1</span>
+    <div class="menu-grid" id="menuGrid"></div>
+  </main>
+
+  <!-- PROBLEM VIEW -->
+  <main class="main-card" id="problemView" style="display: none;">
+    <div class="nav-header">
+      <button class="btn-back" onclick="showMenu()">← Back to Menu</button>
+      <div class="streak-container">
+        <span class="streak-title">Level Progress:</span>
+        <div class="stars" id="starsContainer"></div>
       </div>
+    </div>
 
-      <div class="problem-display" id="problem-text">12 × 34</div>
+    <div class="level-header">
+      <div class="level-title" id="levelTitle">Level 1</div>
+      <div class="level-desc" id="levelDesc">Description</div>
+    </div>
 
-      <div class="input-group">
-        <label for="user-answer" style="color: #94a3b8; font-size: 0.9rem;">Type your answer:</label>
-        <input type="number" id="user-answer" placeholder="?" autocomplete="off">
-        <button class="btn btn-primary" id="submit-btn" onclick="checkAnswer()">Submit Answer</button>
-      </div>
+    <!-- Paper Work Note for Levels 4 & 9 -->
+    <div id="paperNote" class="paper-note" style="display: none;">
+      📝 Note: Please complete your work on paper before typing your answer below!
+    </div>
 
-      <div id="feedback" class="feedback"></div>
+    <!-- Scaffold Given Products Hint for Level 5 -->
+    <div id="scaffoldHint" class="scaffold-hint" style="display: none;"></div>
 
-      <div style="margin-top: 1.5rem; text-align: center;">
-        <span style="font-size: 0.85rem; color: #94a3b8;">
-          Question Progress: <span id="q-count">1</span> / <span id="q-total">5</span>
-        </span>
-        <div class="progress-bar-container">
-          <div class="progress-bar" id="progress-bar"></div>
-        </div>
+    <div class="math-grid" id="mathGrid"></div>
+
+    <div class="controls">
+      <button class="btn btn-secondary" onclick="resetProblem()">Clear</button>
+      <button class="btn btn-primary" id="checkBtn" onclick="checkAnswer()">Check Answer</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </main>
+
+  <!-- CELEBRATION MODAL -->
+  <div class="modal-overlay" id="levelUpModal">
+    <div class="modal">
+      <h2 style="color: var(--success)">🎉 Awesome Job! 🎉</h2>
+      <p id="modalMessage">You mastered this level! Ready for the next challenge?</p>
+      <button class="btn btn-primary" onclick="closeModalNextLevel()">Continue</button>
+    </div>
+  </div>
+
+  <!-- RESET CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="resetModal">
+    <div class="modal">
+      <h2>Reset All Progress?</h2>
+      <p>Are you sure you want to reset all earned stars and lock levels back to Level 1? This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" onclick="cancelResetProgress()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmResetProgress()">Yes, Reset Progress</button>
       </div>
     </div>
   </div>
 
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast"></div>
+
   <script>
-    const STORAGE_KEY = 'multiplication_quest_progress_v1';
-    
-    const levels = [
-      { id: 1, name: "Level 1", desc: "Multiples of 10" },
-      { id: 2, name: "Level 2", desc: "No Regrouping" },
-      { id: 3, name: "Level 3", desc: "Easy Regrouping" },
-      { id: 4, name: "Level 4", desc: "Full Regrouping" },
-      { id: 5, name: "Level 5", desc: "Master Challenge" }
+    const LEVELS = [
+      {
+        level: 1,
+        title: "Level 1: 1-Digit × 2-Digit (No Carrying)",
+        desc: "Multiply without carrying. Fill in the product boxes.",
+        generate: () => {
+          let b0 = rand(2, 4);
+          let a0 = rand(1, Math.floor(9 / b0));
+          let a1 = rand(1, Math.floor(9 / b0));
+          return { numA: a1 * 10 + a0, numB: b0 };
+        }
+      },
+      {
+        level: 2,
+        title: "Level 2: 1-Digit × 2-Digit (With Carrying)",
+        desc: "Multiply with carrying. Fill in the carry box above the tens place.",
+        generate: () => {
+          let b0 = rand(3, 9);
+          let a0 = rand(Math.ceil(10 / b0), 9);
+          let carry = Math.floor((a0 * b0) / 10);
+          let a1 = rand(1, Math.floor((9 - carry) / b0));
+          if (a1 < 1) a1 = 1;
+          return { numA: a1 * 10 + a0, numB: b0 };
+        }
+      },
+      {
+        level: 3,
+        title: "Level 3: Product Greater Than 100",
+        desc: "The product is over 100! Fill in both carry boxes (tens and hundreds).",
+        generate: () => {
+          let b0 = rand(4, 9);
+          let a0 = rand(Math.ceil(10 / b0), 9);
+          let c1 = Math.floor((a0 * b0) / 10);
+          let a1 = rand(Math.ceil((10 - c1) / b0), 9);
+          return { numA: a1 * 10 + a0, numB: b0 };
+        }
+      },
+      {
+        level: 4,
+        title: "Level 4: Independent 1-Digit × 2-Digit",
+        desc: "Perform the multiplication independently. Enter the final product.",
+        generate: () => {
+          let numA = rand(15, 98);
+          let numB = rand(3, 9);
+          return { numA, numB };
+        }
+      },
+      {
+        level: 5,
+        title: "Level 5: Scaffolded 2-Digit × 2-Digit",
+        desc: "Use the given products above to complete the partial products and add them.",
+        generate: () => {
+          let numA = rand(21, 89);
+          let b1 = rand(2, 5);
+          let b0 = rand(2, 5);
+          return { numA, numB: b1 * 10 + b0 };
+        }
+      },
+      {
+        level: 6,
+        title: "Level 6: 2-Digit × 2-Digit (No Carrying)",
+        desc: "Multiply 2-digit numbers with no carrying. Complete both partial rows and the sum.",
+        generate: () => {
+          let b1 = rand(1, 3);
+          let b0 = rand(1, 3);
+          let a1 = rand(1, Math.floor(9 / Math.max(b1, b0)));
+          let a0 = rand(1, Math.floor(9 / Math.max(b1, b0)));
+          return { numA: a1 * 10 + a0, numB: b1 * 10 + b0 };
+        }
+      },
+      {
+        level: 7,
+        title: "Level 7: 2-Digit × 2-Digit (1 Carry)",
+        desc: "Multiply with 1 carry in the calculation. (Carrying boxes are optional!)",
+        generate: () => {
+          while(true) {
+            let numA = rand(12, 45);
+            let numB = rand(12, 45);
+            let a0 = numA % 10, a1 = Math.floor(numA / 10);
+            let b0 = numB % 10, b1 = Math.floor(numB / 10);
+            
+            let c1 = Math.floor((a0 * b0)/10) > 0 ? 1 : 0;
+            let c2 = Math.floor((a1 * b0 + Math.floor((a0 * b0)/10))/10) > 0 ? 1 : 0;
+            let c3 = Math.floor((a0 * b1)/10) > 0 ? 1 : 0;
+            let c4 = Math.floor((a1 * b1 + Math.floor((a0 * b1)/10))/10) > 0 ? 1 : 0;
+            
+            if (c1 + c2 + c3 + c4 === 1) return { numA, numB };
+          }
+        }
+      },
+      {
+        level: 8,
+        title: "Level 8: 2-Digit × 2-Digit (Multiple Carries)",
+        desc: "Multiply with carries in both partial product lines. (Carrying boxes are optional!)",
+        generate: () => {
+          while(true) {
+            let numA = rand(25, 89);
+            let numB = rand(25, 89);
+            let a0 = numA % 10, a1 = Math.floor(numA / 10);
+            let b0 = numB % 10, b1 = Math.floor(numB / 10);
+            
+            let c1 = Math.floor((a0 * b0)/10);
+            let c2 = Math.floor((a0 * b1)/10);
+            if (c1 > 0 && c2 > 0) return { numA, numB };
+          }
+        }
+      },
+      {
+        level: 9,
+        title: "Level 9: Independent 2-Digit × 2-Digit",
+        desc: "Complete 2-digit by 2-digit multiplication independently!",
+        generate: () => {
+          return { numA: rand(14, 99), numB: rand(14, 99) };
+        }
+      }
     ];
 
-    let userProgress = loadProgress();
-    let currentLevel = 1;
-    let currentQuestion = 0;
-    const totalQuestions = 5;
-    let currentNum1 = 0;
-    let currentNum2 = 0;
-    let correctAnswer = 0;
+    let currentLevelIndex = 0;
+    let streak = 0;
+    let currentProblem = null;
+    let levelProgress = Array(LEVELS.length).fill(0);
+    let attemptsCount = 0;
+
+    function rand(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    const STORAGE_KEY = 'multiplication_quest_progress_v2';
+
+    function saveProgress(showToastFlag = true) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(levelProgress));
+        if (showToastFlag) {
+          showToast('💾 Progress saved!');
+        }
+      } catch (e) {
+        console.error('Save failed:', e);
+      }
+    }
 
     function loadProgress() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length === LEVELS.length) {
+            levelProgress = parsed;
+          }
+        }
+      } catch (e) {
+        console.error('Load failed:', e);
       }
-      return { 1: { unlocked: true, completed: false }, 2: { unlocked: false, completed: false }, 3: { unlocked: false, completed: false }, 4: { unlocked: false, completed: false }, 5: { unlocked: false, completed: false } };
     }
 
-    function saveProgress() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(userProgress));
-      alert("Progress saved!");
+    function promptResetProgress() {
+      document.getElementById('resetModal').classList.add('active');
     }
 
-    function resetProgress() {
-      if (confirm("Are you sure you want to reset all your progress?")) {
+    function cancelResetProgress() {
+      document.getElementById('resetModal').classList.remove('active');
+    }
+
+    function confirmResetProgress() {
+      levelProgress = Array(LEVELS.length).fill(0);
+      streak = 0;
+      try {
         localStorage.removeItem(STORAGE_KEY);
-        userProgress = { 1: { unlocked: true, completed: false }, 2: { unlocked: false, completed: false }, 3: { unlocked: false, completed: false }, 4: { unlocked: false, completed: false }, 5: { unlocked: false, completed: false } };
-        showMenu();
-      }
+      } catch (e) {}
+      document.getElementById('resetModal').classList.remove('active');
+      renderMenu();
+      showToast('🔄 All progress has been reset.');
     }
 
-    function renderLevels() {
-      const grid = document.getElementById('level-grid');
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    function renderMenu() {
+      const grid = document.getElementById('menuGrid');
+      const masteryBanner = document.getElementById('masteryBanner');
       grid.innerHTML = '';
 
-      levels.forEach(lvl => {
-        const prog = userProgress[lvl.id] || { unlocked: false, completed: false };
+      const isAllMastered = levelProgress.every(stars => stars >= 5);
+      if (isAllMastered) {
+        masteryBanner.style.display = 'block';
+      } else {
+        masteryBanner.style.display = 'none';
+      }
+
+      LEVELS.forEach((lvl, index) => {
         const card = document.createElement('div');
-        
-        let statusClass = '';
-        let statusText = 'Locked';
-        
-        if (prog.completed) {
-          statusClass = 'completed';
-          statusText = 'Completed ⭐';
-        } else if (prog.unlocked) {
-          statusClass = 'unlocked';
-          statusText = 'Unlocked';
+        const isCompleted = levelProgress[index] >= 5;
+        const isUnlocked = index === 0 || levelProgress[index - 1] >= 5;
+
+        let cardClass = 'level-card';
+        if (isCompleted) {
+          cardClass += ' completed';
+        } else if (!isUnlocked) {
+          cardClass += ' locked';
+        }
+
+        card.className = cardClass;
+
+        if (isUnlocked) {
+          card.onclick = () => startLevel(index);
         } else {
-          statusClass = 'locked';
+          card.onclick = () => showToast(`🔒 Complete Level ${index} first to unlock!`);
         }
 
-        card.className = `level-card ${statusClass}`;
+        const starsEarned = levelProgress[index];
+        const starsText = '★'.repeat(starsEarned) + '☆'.repeat(5 - starsEarned);
+
+        let statusIcon = '🔓';
+        if (isCompleted) {
+          statusIcon = '✅';
+        } else if (!isUnlocked) {
+          statusIcon = '🔒';
+        }
+
         card.innerHTML = `
-          <div class="level-title">${lvl.name}</div>
-          <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:0.5rem;">${lvl.desc}</div>
-          <div class="level-status">${statusText}</div>
+          <div>
+            <div class="level-card-header">
+              <span class="level-number" style="${isCompleted ? 'color: #34d399;' : ''}">Level ${lvl.level}</span>
+              <span class="lock-icon">${statusIcon}</span>
+            </div>
+            <div class="level-card-title">${lvl.title.split(': ')[1]}</div>
+          </div>
+          <div>
+            ${isCompleted ? '<div><span class="badge-completed">Mastered 🌟</span></div>' : ''}
+            <div class="level-card-stars">${starsText}</div>
+          </div>
         `;
-
-        if (prog.unlocked) {
-          card.onclick = () => startLevel(lvl.id);
-        }
-
         grid.appendChild(card);
       });
     }
 
     function showMenu() {
-      document.getElementById('menu-view').style.display = 'block';
-      document.getElementById('game-view').style.display = 'none';
-      document.getElementById('subtitle').style.display = 'block';
-      renderLevels();
+      document.getElementById('menuView').style.display = 'flex';
+      document.getElementById('problemView').style.display = 'none';
+      document.getElementById('headerSubtitle').innerText = "Select a level to begin your quest!";
+      renderMenu();
     }
 
-    function startLevel(lvlId) {
-      currentLevel = lvlId;
-      currentQuestion = 0;
-      document.getElementById('menu-view').style.display = 'none';
-      document.getElementById('game-view').style.display = 'block';
-      document.getElementById('subtitle').style.display = 'none';
-      document.getElementById('level-indicator').textContent = `Level ${currentLevel}`;
-      nextQuestion();
+    function startLevel(index) {
+      currentLevelIndex = index;
+      streak = levelProgress[index];
+      document.getElementById('menuView').style.display = 'none';
+      document.getElementById('problemView').style.display = 'flex';
+      document.getElementById('headerSubtitle').innerText = "Solve the problem to advance your streak!";
+      updateStars();
+      loadProblem();
     }
 
-    function generateNumbers(level) {
-      let n1, n2;
-      if (level === 1) {
-        n1 = Math.floor(Math.random() * 8 + 1) * 10;
-        n2 = Math.floor(Math.random() * 89 + 10);
-      } else if (level === 2) {
-        n1 = Math.floor(Math.random() * 4 + 1) * 10 + Math.floor(Math.random() * 3 + 1);
-        n2 = Math.floor(Math.random() * 3 + 1) * 10 + Math.floor(Math.random() * 3 + 1);
-      } else if (level === 3) {
-        n1 = Math.floor(Math.random() * 40 + 10);
-        n2 = Math.floor(Math.random() * 30 + 10);
-      } else {
-        n1 = Math.floor(Math.random() * 80 + 10);
-        n2 = Math.floor(Math.random() * 80 + 10);
+    function updateStars() {
+      const container = document.getElementById('starsContainer');
+      container.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const star = document.createElement('span');
+        star.className = `star ${i < streak ? 'filled' : ''}`;
+        star.innerText = '★';
+        container.appendChild(star);
       }
-      return [n1, n2];
     }
 
-    function nextQuestion() {
-      if (currentQuestion >= totalQuestions) {
-        completeLevel();
-        return;
-      }
-
-      const [n1, n2] = generateNumbers(currentLevel);
-      currentNum1 = n1;
-      currentNum2 = n2;
-      correctAnswer = n1 * n2;
-
-      document.getElementById('problem-text').textContent = `${n1} × ${n2}`;
-      document.getElementById('user-answer').value = '';
-      document.getElementById('feedback').style.display = 'none';
-      document.getElementById('q-count').textContent = currentQuestion + 1;
-      document.getElementById('q-total').textContent = totalQuestions;
+    function loadProblem() {
+      attemptsCount = 0;
+      document.getElementById('feedback').innerText = '';
+      document.getElementById('feedback').className = 'feedback';
       
-      const pct = (currentQuestion / totalQuestions) * 100;
-      document.getElementById('progress-bar').style.width = `${pct}%`;
+      const config = LEVELS[currentLevelIndex];
+      document.getElementById('levelTitle').innerText = config.title;
+      document.getElementById('levelDesc').innerText = config.desc;
 
-      document.getElementById('user-answer').focus();
+      const paperNote = document.getElementById('paperNote');
+      if (config.level === 4 || config.level === 9) {
+        paperNote.style.display = 'block';
+      } else {
+        paperNote.style.display = 'none';
+      }
+
+      currentProblem = config.generate();
+      renderGrid();
+    }
+
+    function getDigits(num, length) {
+      const str = num.toString().padStart(length, ' ');
+      return str.split('');
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('mathGrid');
+      const hint = document.getElementById('scaffoldHint');
+      grid.innerHTML = '';
+      hint.style.display = 'none';
+
+      const { numA, numB } = currentProblem;
+      const a0 = numA % 10, a1 = Math.floor(numA / 10);
+      const b0 = numB % 10, b1 = Math.floor(numB / 10);
+
+      const lvl = currentLevelIndex + 1;
+
+      if (lvl === 1) {
+        grid.style.gridTemplateColumns = 'repeat(3, 52px)';
+        
+        appendCell(grid, ''); appendCell(grid, a1); appendCell(grid, a0);
+        appendCell(grid, '×', 'operator-cell'); appendCell(grid, ''); appendCell(grid, b0);
+        appendLine(grid, 3);
+
+        let tensAns = Math.floor((numA * numB) / 10);
+        let onesAns = (numA * numB) % 10;
+        appendCell(grid, '');
+        appendInput(grid, 'ans_tens', tensAns);
+        appendInput(grid, 'ans_ones', onesAns);
+
+      } else if (lvl === 2) {
+        grid.style.gridTemplateColumns = 'repeat(4, 52px)';
+        let carryVal = Math.floor((a0 * b0) / 10);
+        let prod = numA * numB;
+        let hAns = Math.floor(prod / 100);
+        let tensAns = Math.floor((prod % 100) / 10);
+        let onesAns = prod % 10;
+
+        appendCell(grid, ''); appendCell(grid, '');
+        appendInput(grid, 'carry_tens', carryVal, true);
+        appendCell(grid, '');
+
+        appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, a1); appendCell(grid, a0);
+        appendCell(grid, '×', 'operator-cell'); appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, b0);
+        appendLine(grid, 4);
+
+        appendCell(grid, '');
+        if (hAns > 0) {
+          appendInput(grid, 'ans_hund', hAns);
+        } else {
+          appendCell(grid, '');
+        }
+        appendInput(grid, 'ans_tens', tensAns);
+        appendInput(grid, 'ans_ones', onesAns);
+
+      } else if (lvl === 3) {
+        grid.style.gridTemplateColumns = 'repeat(4, 52px)';
+        let c1 = Math.floor((a0 * b0) / 10);
+        let c2 = Math.floor((a1 * b0 + c1) / 10);
+        
+        let prod = numA * numB;
+        let hAns = Math.floor(prod / 100);
+        let tAns = Math.floor((prod % 100) / 10);
+        let oAns = prod % 10;
+
+        appendCell(grid, '');
+        appendInput(grid, 'carry_hund', c2, true);
+        appendInput(grid, 'carry_tens', c1, true);
+        appendCell(grid, '');
+
+        appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, a1); appendCell(grid, a0);
+        appendCell(grid, '×', 'operator-cell'); appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, b0);
+        appendLine(grid, 4);
+
+        appendCell(grid, '');
+        appendInput(grid, 'ans_hund', hAns);
+        appendInput(grid, 'ans_tens', tAns);
+        appendInput(grid, 'ans_ones', oAns);
+
+      } else if (lvl === 4 || lvl === 9) {
+        grid.style.gridTemplateColumns = 'repeat(4, 52px)';
+        let digitsA = getDigits(numA, 3);
+        let digitsB = getDigits(numB, 3);
+
+        appendCell(grid, ''); digitsA.forEach(d => appendCell(grid, d));
+        appendCell(grid, '×', 'operator-cell'); digitsB.forEach(d => appendCell(grid, d));
+        appendLine(grid, 4);
+
+        const container = document.createElement('div');
+        container.style.gridColumn = '1 / -1';
+        container.style.display = 'flex';
+        container.style.justifyContent = 'center';
+        container.style.paddingTop = '10px';
+
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'single-answer-input';
+        inp.dataset.target = (numA * numB).toString();
+        inp.id = 'ans_independent';
+        inp.autocomplete = 'off';
+        inp.onkeyup = (e) => { if(e.key === 'Enter') checkAnswer(); };
+        container.appendChild(inp);
+        grid.appendChild(container);
+
+      } else if (lvl === 5) {
+        let p1 = numA * b0;
+        let p2 = numA * b1;
+        let total = numA * numB;
+
+        hint.style.display = 'block';
+        hint.innerHTML = `
+          <div class="scaffold-hint-title">
+            💡 GIVEN PRODUCTS — USE THESE VALUES BELOW!
+          </div>
+          <div class="scaffold-hint-boxes">
+            <div class="scaffold-badge">
+              Row 1 (${b0}s place): <span class="highlight">${numA} × ${b0} = ${p1}</span>
+            </div>
+            <div class="scaffold-badge">
+              Row 2 (${b1}0s place): <span class="highlight">${numA} × ${b1} = ${p2}</span>
+            </div>
+          </div>
+          <div class="scaffold-instruction">
+            👉 Copy <b style="color:#38bdf8">${p1}</b> into row 1, and <b style="color:#38bdf8">${p2}</b> into row 2 (before the 0), then add them up!
+          </div>
+        `;
+
+        grid.style.gridTemplateColumns = 'repeat(5, 52px)';
+
+        appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, a1); appendCell(grid, a0);
+        appendCell(grid, '×', 'operator-cell'); appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, b1); appendCell(grid, b0);
+        appendLine(grid, 5);
+
+        let p1Digits = getDigits(p1, 3);
+        appendCell(grid, ''); appendCell(grid, '');
+        appendInput(grid, 'p1_2', p1Digits[0].trim());
+        appendInput(grid, 'p1_1', p1Digits[1].trim());
+        appendInput(grid, 'p1_0', p1Digits[2].trim());
+
+        let p2Digits = getDigits(p2, 3);
+        appendCell(grid, '');
+        appendInput(grid, 'p2_2', p2Digits[0].trim());
+        appendInput(grid, 'p2_1', p2Digits[1].trim());
+        appendInput(grid, 'p2_0', p2Digits[2].trim());
+        appendCell(grid, '0');
+
+        appendLine(grid, 5);
+
+        let sumDigits = getDigits(total, 4);
+        appendCell(grid, '');
+        appendInput(grid, 'sum_3', sumDigits[0].trim());
+        appendInput(grid, 'sum_2', sumDigits[1].trim());
+        appendInput(grid, 'sum_1', sumDigits[2].trim());
+        appendInput(grid, 'sum_0', sumDigits[3].trim());
+
+      } else if (lvl === 6) {
+        grid.style.gridTemplateColumns = 'repeat(5, 52px)';
+        let p1 = numA * b0;
+        let p2 = numA * b1 * 10;
+        let sum = numA * numB;
+
+        appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, a1); appendCell(grid, a0);
+        appendCell(grid, '×', 'operator-cell'); appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, b1); appendCell(grid, b0);
+        appendLine(grid, 5);
+
+        let p1Str = p1.toString();
+        appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, '');
+        appendInput(grid, 'p1_1', p1Str[0]);
+        appendInput(grid, 'p1_0', p1Str[1]);
+
+        let p2Str = p2.toString();
+        appendCell(grid, ''); appendCell(grid, '');
+        appendInput(grid, 'p2_2', p2Str[0]);
+        appendInput(grid, 'p2_1', p2Str[1]);
+        appendInput(grid, 'p2_0', p2Str[2]);
+
+        appendLine(grid, 5);
+
+        let sumDigits = getDigits(sum, 4);
+        appendCell(grid, '');
+        appendInput(grid, 'sum_3', sumDigits[0].trim());
+        appendInput(grid, 'sum_2', sumDigits[1].trim());
+        appendInput(grid, 'sum_1', sumDigits[2].trim());
+        appendInput(grid, 'sum_0', sumDigits[3].trim());
+
+      } else if (lvl === 7 || lvl === 8) {
+        grid.style.gridTemplateColumns = 'repeat(5, 52px)';
+        
+        let c_b0 = Math.floor((a0 * b0) / 10);
+        let c_b1 = Math.floor((a0 * b1) / 10);
+        let c_hund_b0 = Math.floor((a1 * b0 + c_b0) / 10);
+        let c_hund_b1 = Math.floor((a1 * b1 + c_b1) / 10);
+
+        let tensCarryTarget = c_b0 > 0 ? c_b0 : (c_b1 > 0 ? c_b1 : 0);
+        let hundCarryTarget = c_hund_b0 > 0 ? c_hund_b0 : (c_hund_b1 > 0 ? c_hund_b1 : 0);
+
+        let p1 = numA * b0;
+        let p2 = numA * b1 * 10;
+        let sum = numA * numB;
+
+        appendCell(grid, ''); appendCell(grid, '');
+        appendInput(grid, 'carry_hund', hundCarryTarget > 0 ? hundCarryTarget : '', true);
+        appendInput(grid, 'carry_tens', tensCarryTarget > 0 ? tensCarryTarget : '', true);
+        appendCell(grid, '');
+
+        appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, a1); appendCell(grid, a0);
+        appendCell(grid, '×', 'operator-cell'); appendCell(grid, ''); appendCell(grid, ''); appendCell(grid, b1); appendCell(grid, b0);
+        appendLine(grid, 5);
+
+        let p1Digits = getDigits(p1, 3);
+        appendCell(grid, ''); appendCell(grid, '');
+        appendInput(grid, 'p1_2', p1Digits[0].trim());
+        appendInput(grid, 'p1_1', p1Digits[1].trim());
+        appendInput(grid, 'p1_0', p1Digits[2].trim());
+
+        let p2Digits = getDigits(p2, 4);
+        appendCell(grid, '');
+        appendInput(grid, 'p2_3', p2Digits[0].trim());
+        appendInput(grid, 'p2_2', p2Digits[1].trim());
+        appendInput(grid, 'p2_1', p2Digits[2].trim());
+        appendInput(grid, 'p2_0', p2Digits[3].trim());
+
+        appendLine(grid, 5);
+
+        let sumDigits = getDigits(sum, 4);
+        appendCell(grid, '');
+        appendInput(grid, 'sum_3', sumDigits[0].trim());
+        appendInput(grid, 'sum_2', sumDigits[1].trim());
+        appendInput(grid, 'sum_1', sumDigits[2].trim());
+        appendInput(grid, 'sum_0', sumDigits[3].trim());
+      }
+
+      setupInputHandlers();
+    }
+
+    function appendCell(grid, content, className = 'digit-cell') {
+      const div = document.createElement('div');
+      div.className = className;
+      div.innerText = content;
+      grid.appendChild(div);
+    }
+
+    function appendInput(grid, id, expectedValue, isCarry = false) {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.maxLength = 1;
+      inp.className = `digit-input ${isCarry ? 'carry-box' : ''}`;
+      inp.dataset.target = expectedValue;
+      inp.dataset.isCarry = isCarry ? "true" : "false";
+      inp.id = id;
+      inp.autocomplete = 'off';
+      grid.appendChild(inp);
+    }
+
+    function appendLine(grid, columns) {
+      const line = document.createElement('div');
+      line.className = 'math-line';
+      grid.appendChild(line);
+    }
+
+    function setupInputHandlers() {
+      const inputs = Array.from(document.querySelectorAll('.digit-input'));
+      inputs.forEach((input) => {
+        input.onkeydown = (e) => {
+          if (e.key === 'Enter') {
+            checkAnswer();
+          }
+        };
+      });
     }
 
     function checkAnswer() {
-      const input = document.getElementById('user-answer');
-      const ans = parseInt(input.value, 10);
-      const feedback = document.getElementById('feedback');
+      const inputs = document.querySelectorAll('.digit-input, .single-answer-input');
+      const lvl = currentLevelIndex + 1;
+      const isLevel7or8 = (lvl === 7 || lvl === 8);
 
-      if (isNaN(ans)) return;
+      let mainAnswersCorrect = true;
+      let carryAnswersCorrect = true;
 
-      if (ans === correctAnswer) {
-        feedback.className = 'feedback correct';
-        feedback.textContent = 'Correct! Great job!';
-        feedback.style.display = 'block';
-        currentQuestion++;
-        setTimeout(nextQuestion, 1000);
-      } else {
-        feedback.className = 'feedback incorrect';
-        feedback.textContent = `Not quite. Try again!`;
-        feedback.style.display = 'block';
-      }
-    }
+      inputs.forEach(input => {
+        const val = input.value.trim();
+        const target = input.dataset.target.toString().trim();
+        const isCarry = input.dataset.isCarry === "true" || input.classList.contains('carry-box');
 
-    function completeLevel() {
-      userProgress[currentLevel].completed = true;
-      if (currentLevel < 5) {
-        if (!userProgress[currentLevel + 1]) {
-          userProgress[currentLevel + 1] = { unlocked: true, completed: false };
+        if (isCarry) {
+          if (target === '' || val === target) {
+            input.classList.remove('incorrect');
+            if (val !== '') input.classList.add('correct');
+          } else {
+            carryAnswersCorrect = false;
+          }
         } else {
-          userProgress[currentLevel + 1].unlocked = true;
+          if (val === target) {
+            input.classList.remove('incorrect');
+            input.classList.add('correct');
+          } else {
+            input.classList.remove('correct');
+            input.classList.add('incorrect');
+            mainAnswersCorrect = false;
+          }
+        }
+      });
+
+      let problemPassed = false;
+      if (isLevel7or8) {
+        problemPassed = mainAnswersCorrect;
+        
+        if (mainAnswersCorrect) {
+          inputs.forEach(input => {
+            if (input.dataset.isCarry === "true" || input.classList.contains('carry-box')) {
+              input.classList.remove('incorrect');
+              if (input.value.trim() === input.dataset.target.toString().trim() && input.value.trim() !== '') {
+                input.classList.add('correct');
+              }
+            }
+          });
+        } else {
+          inputs.forEach(input => {
+            const isCarry = input.dataset.isCarry === "true" || input.classList.contains('carry-box');
+            if (isCarry && input.value.trim() !== input.dataset.target.toString().trim() && input.dataset.target !== '') {
+              input.classList.remove('correct');
+              input.classList.add('incorrect');
+            }
+          });
+        }
+      } else {
+        problemPassed = mainAnswersCorrect && carryAnswersCorrect;
+        if (!carryAnswersCorrect) {
+          inputs.forEach(input => {
+            const isCarry = input.dataset.isCarry === "true" || input.classList.contains('carry-box');
+            if (isCarry && input.value.trim() !== input.dataset.target.toString().trim()) {
+              input.classList.remove('correct');
+              input.classList.add('incorrect');
+            }
+          });
         }
       }
-      saveProgress();
-      triggerConfetti();
-      alert(`Level ${currentLevel} Complete! 🎉`);
-      showMenu();
+
+      const feedback = document.getElementById('feedback');
+
+      if (problemPassed) {
+        feedback.innerText = '✨ Great job! Correct! ✨';
+        feedback.className = 'feedback success';
+        streak++;
+        if (streak > levelProgress[currentLevelIndex]) {
+          levelProgress[currentLevelIndex] = streak;
+        }
+        saveProgress(false);
+        updateStars();
+
+        if (streak >= 5) {
+          setTimeout(triggerLevelUp, 600);
+        } else {
+          setTimeout(loadProblem, 1200);
+        }
+      } else {
+        attemptsCount++;
+        
+        if (attemptsCount === 1) {
+          feedback.innerText = '⚠️ Not quite right! Check the highlighted boxes and try again. (1 try left)';
+          feedback.className = 'feedback error';
+        } else {
+          feedback.innerText = '❌ Incorrect on second try. Streak reset to 0.';
+          feedback.className = 'feedback error';
+          streak = 0;
+          updateStars();
+          setTimeout(loadProblem, 1800);
+        }
+      }
     }
 
-    document.getElementById('user-answer').addEventListener('keyup', function(e) {
-      if (e.key === 'Enter') {
-        checkAnswer();
+    function resetProblem() {
+      const inputs = document.querySelectorAll('.digit-input, .single-answer-input');
+      inputs.forEach(input => {
+        input.value = '';
+        input.classList.remove('correct', 'incorrect');
+      });
+      document.getElementById('feedback').innerText = '';
+    }
+
+    function triggerLevelUp() {
+      launchConfetti();
+      const modal = document.getElementById('levelUpModal');
+      const msg = document.getElementById('modalMessage');
+      
+      if (currentLevelIndex < LEVELS.length - 1) {
+        msg.innerText = `You earned 5 stars in a row on Level ${currentLevelIndex + 1}! Level ${currentLevelIndex + 2} is now unlocked!`;
+      } else {
+        msg.innerText = `🏆 You achieved MULTIPLICATION MASTERY across all 9 levels! Fantastic job! 🏆`;
       }
-    });
+      
+      modal.classList.add('active');
+    }
 
-    // CONFETTI ANIMATION
-    const canvas = document.getElementById('confetti');
-    const ctx = canvas.getContext('2d');
-    let pieces = [];
+    function closeModalNextLevel() {
+      document.getElementById('levelUpModal').classList.remove('active');
+      if (currentLevelIndex < LEVELS.length - 1) {
+        startLevel(currentLevelIndex + 1);
+      } else {
+        showMenu();
+      }
+    }
 
-    function resizeCanvas() {
+    function launchConfetti() {
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
 
-    function triggerConfetti() {
-      pieces = [];
-      const colors = ['#f43f5e', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
-      for (let i = 0; i < 80; i++) {
-        pieces.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height - canvas.height,
-          size: Math.random() * 8 + 4,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          speedY: Math.random() * 3 + 2,
-          speedX: Math.random() * 2 - 1,
-          rot: Math.random() * 360,
-          rotSpeed: Math.random() * 10 - 5
-        });
-      }
-      renderConfetti();
-    }
+      const pieces = Array.from({ length: 90 }).map(() => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        size: Math.random() * 8 + 4,
+        color: ['#818cf8', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#38bdf8'][Math.floor(Math.random() * 6)],
+        speed: Math.random() * 4 + 2,
+        angle: Math.random() * 360
+      }));
 
-    function renderConfetti() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pieces.forEach(p => {
-        p.y += p.speedY;
-        p.x += p.speedX;
-        p.rot += p.rotSpeed;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rot * Math.PI) / 180);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-        ctx.restore();
-      });
-      if (pieces.some(p => p.y < canvas.height)) {
-        requestAnimationFrame(renderConfetti);
-      } else {
+      const render = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
+        pieces.forEach(p => {
+          p.y += p.speed;
+          p.angle += 2;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.angle * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+
+        if (pieces.some(p => p.y < canvas.height)) {
+          requestAnimationFrame(render);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      };
+      render();
     }
 
-    // Initialize Menu on Load
+    // Initialize application on load
+    loadProgress();
     showMenu();
   </script>
 </body>
