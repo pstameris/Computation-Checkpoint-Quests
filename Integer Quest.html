@@ -256,7 +256,7 @@
         <span class="badge">Level 3</span>
         <div id="l3-streak-tag" class="streak-badge"></div>
       </div>
-      <p class="instructions">Drag or click cards to sort them into positive and negative boxes, then combine!</p>
+      <p class="instructions">Drag cards to sort them into positive and negative boxes, then combine!</p>
 
       <div id="l3-pool" class="cards-bank" style="min-height: 100px; margin-bottom: 20px; justify-content: center;" ondragover="allowDrop(event)" ondrop="dropL3(event, 'pool')"></div>
 
@@ -404,8 +404,8 @@
     let completedLevels = new Set(JSON.parse(localStorage.getItem('iq_completed_levels') || '[]'));
 
     function isLevelUnlocked(lvl) {
-      if (lvl === 1) return true; // Level 1 is always unlocked
-      return completedLevels.has(lvl - 1); // Level N unlocks when Level N-1 is completed
+      if (lvl === 1) return true;
+      return completedLevels.has(lvl - 1);
     }
 
     function updateProgressUI() {
@@ -417,7 +417,6 @@
         const unlocked = isLevelUnlocked(lvl);
         const completed = completedLevels.has(lvl);
 
-        // Reset classes
         card.classList.remove('locked', 'unlocked', 'completed');
 
         if (completed) {
@@ -474,7 +473,7 @@
     }
 
     function startLevel(lvl) {
-      if (!isLevelUnlocked(lvl)) return; // Prevent starting locked levels
+      if (!isLevelUnlocked(lvl)) return;
 
       currentLevel = lvl;
       currentStreak = 0;
@@ -687,17 +686,15 @@
       document.getElementById('l3-feedback').innerHTML = '';
       document.getElementById('l3-btn').disabled = false;
 
-      l3Vals = [getRandomInt(-10, 10, true), getRandomInt(-10, 10, true), getRandomInt(-10, 10, true), getRandomInt(-10, 10, true)];
+      l3Vals = [
+        getRandomInt(-10, 10, true),
+        getRandomInt(-10, 10, true),
+        getRandomInt(-10, 10, true),
+        getRandomInt(-10, 10, true)
+      ];
+
       l3Vals.forEach((v, i) => {
         const c = createCard(`l3-c-${i}`, v, '70px', '90px', '1.8rem');
-        c.onclick = () => {
-          if (c.parentElement.id === 'l3-pool') {
-            (v > 0 ? pos : neg).appendChild(c);
-          } else {
-            pool.appendChild(c);
-          }
-          updateL3Sums();
-        };
         pool.appendChild(c);
       });
       updateL3Sums();
@@ -731,45 +728,59 @@
       const wrongInPos = Array.from(document.getElementById('l3-pos-zone').children).some(c => parseInt(c.dataset.value, 10) < 0);
       const wrongInNeg = Array.from(document.getElementById('l3-neg-zone').children).some(c => parseInt(c.dataset.value, 10) > 0);
 
-      if (poolEmpty && !wrongInPos && !wrongInNeg && userVal === target) {
+      if (!poolEmpty) {
+        document.getElementById('l3-feedback').innerHTML = '<span class="incorrect-text">Sort all cards into boxes first!</span>';
+        return;
+      }
+      if (wrongInPos || wrongInNeg) {
+        handleIncorrectAnswer("Cards placed in wrong positive/negative boxes! Streak reset.");
+        return;
+      }
+      if (userVal === target) {
         handleCorrectAnswer(initL3, 'l3-btn');
       } else {
-        handleIncorrectAnswer("Sort incorrectly or wrong total! Streak reset.");
+        handleIncorrectAnswer();
       }
     }
 
     // ================= LEVEL 4 LOGIC (EQUATION BUILDER) =================
     let l4Num1 = 0, l4Num2 = 0;
     function initL4() {
-      document.getElementById('l4-input').value = '';
-      document.getElementById('l4-feedback').innerHTML = '';
-      document.getElementById('l4-slot1').innerHTML = '';
-      document.getElementById('l4-slot2').innerHTML = '';
-      document.getElementById('l4-btn').disabled = false;
-
       l4Num1 = getRandomInt(-10, 10);
       l4Num2 = getRandomInt(-10, 10);
-      document.getElementById('l4-statement').innerText = `${fmtNum(l4Num1)} + ${fmtNum(l4Num2)}`;
-
-      buildBank('l4-bank', (c) => {
-        const s1 = document.getElementById('l4-slot1');
-        const s2 = document.getElementById('l4-slot2');
-        if (c.parentElement.classList.contains('drop-slot')) document.getElementById('l4-bank').appendChild(c);
-        else if (s1.children.length === 0) s1.appendChild(c);
-        else if (s2.children.length === 0) s2.appendChild(c);
-      });
+      document.getElementById('l4-statement').innerText = `${fmtNum(l4Num1)} + ${fmtNum(l4Num2)} = ?`;
+      document.getElementById('l4-slot1').innerHTML = '';
+      document.getElementById('l4-slot2').innerHTML = '';
+      document.getElementById('l4-input').value = '';
+      document.getElementById('l4-feedback').innerHTML = '';
+      document.getElementById('l4-btn').disabled = false;
+      buildBank('l4-bank', autoMoveL4);
     }
 
-    function clearSlotL4(slotId) {
-      const slot = document.getElementById(`l4-${slotId}`);
+    function autoMoveL4(card) {
+      if (document.getElementById('l4-btn').disabled) return;
+      const slot1 = document.getElementById('l4-slot1');
+      const slot2 = document.getElementById('l4-slot2');
+      if (card.parentElement.id === 'l4-bank') {
+        if (slot1.children.length === 0) slot1.appendChild(card);
+        else if (slot2.children.length === 0) slot2.appendChild(card);
+      } else {
+        document.getElementById('l4-bank').appendChild(card);
+      }
+    }
+
+    function clearSlotL4(slotKey) {
+      if (document.getElementById('l4-btn').disabled) return;
+      const slot = document.getElementById(`l4-${slotKey}`);
       if (slot && slot.children.length > 0) document.getElementById('l4-bank').appendChild(slot.children[0]);
     }
 
     function dropL4(e, targetId) {
       e.preventDefault();
+      if (document.getElementById('l4-btn').disabled) return;
       const card = document.getElementById(e.dataTransfer.getData('text/plain'));
       if (!card) return;
-      if (targetId === 'slot1' || targetId === 'slot2') {
+      if (targetId.startsWith('slot')) {
         const slot = document.getElementById(`l4-${targetId}`);
         if (slot.children.length > 0) document.getElementById('l4-bank').appendChild(slot.children[0]);
         slot.appendChild(card);
@@ -780,28 +791,40 @@
 
     function checkL4(e) {
       e.preventDefault();
-      const c1 = document.getElementById('l4-slot1').children[0];
-      const c2 = document.getElementById('l4-slot2').children[0];
-      const userAns = parseInt(document.getElementById('l4-input').value, 10);
+      const slot1 = document.getElementById('l4-slot1');
+      const slot2 = document.getElementById('l4-slot2');
+      const val1 = slot1.children.length > 0 ? parseInt(slot1.children[0].dataset.value, 10) : null;
+      const val2 = slot2.children.length > 0 ? parseInt(slot2.children[0].dataset.value, 10) : null;
+      const userVal = parseInt(document.getElementById('l4-input').value, 10);
+      const expectedSum = l4Num1 + l4Num2;
 
-      if (c1 && c2 && parseInt(c1.dataset.value, 10) === l4Num1 && parseInt(c2.dataset.value, 10) === l4Num2 && userAns === (l4Num1 + l4Num2)) {
+      if (val1 === null || val2 === null) {
+        document.getElementById('l4-feedback').innerHTML = '<span class="incorrect-text">Place both cards in slots first!</span>';
+        return;
+      }
+      if (val1 === l4Num1 && val2 === l4Num2 && userVal === expectedSum) {
         handleCorrectAnswer(initL4, 'l4-btn');
       } else {
-        handleIncorrectAnswer();
+        handleIncorrectAnswer("Cards or sum incorrect! Streak reset.");
       }
     }
 
-    // ================= LEVEL 5 LOGIC (ADDITION -30 TO 30) =================
-    let l5Target = 0;
+    // ================= LEVEL 5 LOGIC (2-INTEGER ADDITION) =================
+    let l5Target = 0, l5Num1 = 0, l5Num2 = 0;
+
     function initL5() {
-      const n1 = getRandomInt(-30, 30);
-      const n2 = getRandomInt(-30, 30);
-      l5Target = n1 + n2;
-      document.getElementById('l5-statement').innerText = `${fmtNum(n1)} + ${fmtNum(n2)}`;
       document.getElementById('l5-input').value = '';
       document.getElementById('l5-feedback').innerHTML = '';
       document.getElementById('l5-btn').disabled = false;
-      document.getElementById('l5-input').focus();
+
+      // Exclude 0 and ensure at least one negative number
+      do {
+        l5Num1 = getRandomInt(-30, 30, true);
+        l5Num2 = getRandomInt(-30, 30, true);
+      } while (l5Num1 > 0 && l5Num2 > 0);
+
+      l5Target = l5Num1 + l5Num2;
+      document.getElementById('l5-statement').innerText = `${fmtNum(l5Num1)} + ${fmtNum(l5Num2)} = ?`;
     }
 
     function checkL5(e) {
@@ -815,95 +838,163 @@
     }
 
     // ================= LEVEL 6 LOGIC (SUBTRACTION & FLIP) =================
-    let l6Num1 = 0, l6Num2 = 0, l6Step = 1;
-    function initL6() {
-      l6Step = 1;
-      const btn = document.getElementById('l6-btn');
-      btn.innerText = 'Check Setup'; btn.className = 'action-btn'; btn.disabled = false;
-      
-      const op = document.getElementById('l6-op');
-      op.innerText = '-'; op.className = 'operator';
+    let l6Num1 = 0, l6Num2 = 0, l6State = 'setup';
 
-      const input = document.getElementById('l6-input');
-      input.value = ''; input.disabled = true;
+    function ensureL6BankHasCard(val) {
+      const bank = document.getElementById('l6-bank');
+      const hasCard = Array.from(bank.children).some(c => parseInt(c.dataset.value, 10) === val);
+      if (!hasCard) {
+        const uniqueId = `l6-bank-card-${val}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const card = createCard(uniqueId, val, '', '', '');
+        card.onclick = () => autoMoveL6(card);
 
-      document.getElementById('l6-instructions').innerText = 'Drag cards into the boxes to setup the subtraction problem!';
-      document.getElementById('l6-feedback').innerHTML = '';
-      document.getElementById('l6-slot1').innerHTML = '';
-      document.getElementById('l6-slot2').innerHTML = '';
-
-      l6Num1 = getRandomInt(-10, 10);
-      l6Num2 = getRandomInt(-10, 10);
-      document.getElementById('l6-statement').innerText = `${fmtNum(l6Num1)} - ${fmtNum(l6Num2)}`;
-
-      buildBank('l6-bank', (c) => {
-        if (l6Step > 1) return;
-        const s1 = document.getElementById('l6-slot1');
-        const s2 = document.getElementById('l6-slot2');
-        if (c.parentElement.classList.contains('drop-slot')) document.getElementById('l6-bank').appendChild(c);
-        else if (s1.children.length === 0) s1.appendChild(c);
-        else if (s2.children.length === 0) s2.appendChild(c);
-      });
+        let inserted = false;
+        for (let i = 0; i < bank.children.length; i++) {
+          if (val < parseInt(bank.children[i].dataset.value, 10)) {
+            bank.insertBefore(card, bank.children[i]);
+            inserted = true;
+            break;
+          }
+        }
+        if (!inserted) bank.appendChild(card);
+      }
     }
 
-    function clearSlotL6(slotId) {
-      if (l6Step > 1) return;
-      const slot = document.getElementById(`l6-${slotId}`);
-      if (slot && slot.children.length > 0) document.getElementById('l6-bank').appendChild(slot.children[0]);
+    function initL6() {
+      l6State = 'setup';
+      document.getElementById('l6-slot1').innerHTML = '';
+      document.getElementById('l6-slot2').innerHTML = '';
+      document.getElementById('l6-feedback').innerHTML = '';
+      
+      const op = document.getElementById('l6-op');
+      op.innerText = '-';
+      op.className = 'operator';
+      
+      const input = document.getElementById('l6-input');
+      input.value = '';
+      input.disabled = true;
+
+      const btn = document.getElementById('l6-btn');
+      btn.innerText = 'Check Setup';
+      btn.className = 'action-btn';
+      btn.disabled = false;
+
+      document.getElementById('l6-instructions').innerText = 'Drag cards into the boxes to setup the subtraction problem!';
+
+      // Generate numbers: Exclude 0 and exclude two positive cards
+      do {
+        l6Num1 = getRandomInt(-10, 10, true);
+        l6Num2 = getRandomInt(-10, 10, true);
+      } while (l6Num1 > 0 && l6Num2 > 0);
+
+      document.getElementById('l6-statement').innerText = `${fmtNum(l6Num1)} - ${fmtNum(l6Num2)} = ?`;
+
+      buildBank('l6-bank', autoMoveL6);
+    }
+
+    function autoMoveL6(card) {
+      if (document.getElementById('l6-btn').disabled || l6State !== 'setup') return;
+      
+      const slot1 = document.getElementById('l6-slot1');
+      const slot2 = document.getElementById('l6-slot2');
+
+      if (card.parentElement.id === 'l6-bank') {
+        let targetSlot = null;
+        if (slot1.children.length === 0) targetSlot = slot1;
+        else if (slot2.children.length === 0) targetSlot = slot2;
+
+        if (targetSlot) {
+          const val = parseInt(card.dataset.value, 10);
+          targetSlot.appendChild(card);
+          ensureL6BankHasCard(val);
+        }
+      } else {
+        card.remove();
+      }
+    }
+
+    function clearSlotL6(slotKey) {
+      if (document.getElementById('l6-btn').disabled || l6State !== 'setup') return;
+      const slot = document.getElementById(`l6-${slotKey}`);
+      if (slot && slot.children.length > 0) {
+        slot.children[0].remove();
+      }
     }
 
     function dropL6(e, targetId) {
       e.preventDefault();
-      if (l6Step > 1) return;
-      const card = document.getElementById(e.dataTransfer.getData('text/plain'));
+      if (document.getElementById('l6-btn').disabled || l6State !== 'setup') return;
+      const cardId = e.dataTransfer.getData('text/plain');
+      const card = document.getElementById(cardId);
       if (!card) return;
-      if (targetId === 'slot1' || targetId === 'slot2') {
+
+      if (targetId.startsWith('slot')) {
         const slot = document.getElementById(`l6-${targetId}`);
-        if (slot.children.length > 0) document.getElementById('l6-bank').appendChild(slot.children[0]);
+        if (slot.children.length > 0) slot.children[0].remove();
+        
+        const val = parseInt(card.dataset.value, 10);
         slot.appendChild(card);
+        ensureL6BankHasCard(val);
       } else {
-        document.getElementById('l6-bank').appendChild(card);
+        card.remove();
       }
     }
 
     function handleL6Action(e) {
       e.preventDefault();
-      if (l6Step === 1) {
-        const c1 = document.getElementById('l6-slot1').children[0];
-        const c2 = document.getElementById('l6-slot2').children[0];
-        if (c1 && c2 && parseInt(c1.dataset.value, 10) === l6Num1 && parseInt(c2.dataset.value, 10) === l6Num2) {
-          document.getElementById('l6-feedback').innerHTML = '<span class="correct-text">Setup Correct! 👍</span>';
-          document.getElementById('l6-instructions').innerText = 'Now click FLIP to change subtraction to adding the opposite!';
-          l6Step = 2;
-          const btn = document.getElementById('l6-btn');
-          btn.innerText = 'Flip Equation 🔄'; btn.className = 'action-btn btn-flip';
-        } else {
-          handleIncorrectAnswer("Incorrect setup! Streak reset.");
+      const fb = document.getElementById('l6-feedback');
+
+      if (l6State === 'setup') {
+        const slot1 = document.getElementById('l6-slot1');
+        const slot2 = document.getElementById('l6-slot2');
+
+        const val1 = slot1.children.length > 0 ? parseInt(slot1.children[0].dataset.value, 10) : null;
+        const val2 = slot2.children.length > 0 ? parseInt(slot2.children[0].dataset.value, 10) : null;
+
+        if (val1 === null || val2 === null) {
+          fb.innerHTML = '<span class="incorrect-text">Place both cards in the setup slots first!</span>';
+          return;
         }
-      } else if (l6Step === 2) {
-        document.getElementById('l6-feedback').innerHTML = '';
+
+        if (val1 === l6Num1 && val2 === l6Num2) {
+          fb.innerHTML = '<span class="correct-text">Setup correct! Now click FLIP to change subtraction to addition!</span>';
+          l6State = 'flip';
+          const btn = document.getElementById('l6-btn');
+          btn.innerText = 'FLIP!';
+          btn.className = 'action-btn btn-flip';
+        } else {
+          handleIncorrectAnswer("Setup does not match the statement! Streak reset.");
+        }
+      } else if (l6State === 'flip') {
+        fb.innerHTML = '';
         const op = document.getElementById('l6-op');
-        op.innerText = '+'; op.classList.add('plus');
+        op.innerText = '+';
+        op.classList.add('plus');
 
-        const c2 = document.getElementById('l6-slot2').children[0];
-        c2.classList.add('flipping');
-        setTimeout(() => {
-          const newVal = -parseInt(c2.dataset.value, 10);
-          c2.dataset.value = newVal;
-          styleCardEl(c2, newVal);
-          c2.classList.remove('flipping');
-        }, 200);
+        const slot2Card = document.getElementById('l6-slot2').children[0];
+        if (slot2Card) {
+          slot2Card.classList.add('flipping');
+          setTimeout(() => {
+            const flippedVal = -l6Num2;
+            styleCardEl(slot2Card, flippedVal);
+            slot2Card.dataset.value = flippedVal;
+            slot2Card.classList.remove('flipping');
+          }, 150);
+        }
 
-        l6Step = 3;
-        document.getElementById('l6-instructions').innerText = 'Now calculate the answer!';
-        const input = document.getElementById('l6-input');
-        input.disabled = false; input.focus();
-        
+        document.getElementById('l6-input').disabled = false;
+        document.getElementById('l6-input').focus();
+        document.getElementById('l6-instructions').innerText = 'Now solve the addition problem!';
+
+        l6State = 'solve';
         const btn = document.getElementById('l6-btn');
-        btn.innerText = 'Submit Answer'; btn.className = 'action-btn';
-      } else if (l6Step === 3) {
-        const userAns = parseInt(document.getElementById('l6-input').value, 10);
-        if (userAns === (l6Num1 - l6Num2)) {
+        btn.innerText = 'Submit Answer';
+        btn.className = 'action-btn';
+      } else if (l6State === 'solve') {
+        const userVal = parseInt(document.getElementById('l6-input').value, 10);
+        const expected = l6Num1 - l6Num2;
+
+        if (userVal === expected) {
           handleCorrectAnswer(initL6, 'l6-btn');
         } else {
           handleIncorrectAnswer();
@@ -911,17 +1002,22 @@
       }
     }
 
-    // ================= LEVEL 7 LOGIC (SUBTRACTION -30 TO 30) =================
-    let l7Target = 0;
+    // ================= LEVEL 7 LOGIC (2-INTEGER SUBTRACTION) =================
+    let l7Target = 0, l7Num1 = 0, l7Num2 = 0;
+
     function initL7() {
-      const n1 = getRandomInt(-30, 30);
-      const n2 = getRandomInt(-30, 30);
-      l7Target = n1 - n2;
-      document.getElementById('l7-statement').innerText = `${fmtNum(n1)} - ${fmtNum(n2)}`;
       document.getElementById('l7-input').value = '';
       document.getElementById('l7-feedback').innerHTML = '';
       document.getElementById('l7-btn').disabled = false;
-      document.getElementById('l7-input').focus();
+
+      // Exclude 0, and avoid pos - pos when result is positive
+      do {
+        l7Num1 = getRandomInt(-30, 30, true);
+        l7Num2 = getRandomInt(-30, 30, true);
+        l7Target = l7Num1 - l7Num2;
+      } while (l7Num1 > 0 && l7Num2 > 0 && l7Target > 0);
+
+      document.getElementById('l7-statement').innerText = `${fmtNum(l7Num1)} - ${fmtNum(l7Num2)} = ?`;
     }
 
     function checkL7(e) {
@@ -934,19 +1030,29 @@
       }
     }
 
-    // ================= LEVEL 8 LOGIC (MIXED OPERATIONS -30 TO 30) =================
-    let l8Target = 0;
+    // ================= LEVEL 8 LOGIC (MIXED OPERATIONS) =================
+    let l8Target = 0, l8Num1 = 0, l8Num2 = 0, l8IsAdd = true;
+
     function initL8() {
-      const n1 = getRandomInt(-30, 30);
-      const n2 = getRandomInt(-30, 30);
-      const isAdd = Math.random() > 0.5;
-      l8Target = isAdd ? (n1 + n2) : (n1 - n2);
-      const op = isAdd ? '+' : '-';
-      document.getElementById('l8-statement').innerText = `${fmtNum(n1)} ${op} ${fmtNum(n2)}`;
       document.getElementById('l8-input').value = '';
       document.getElementById('l8-feedback').innerHTML = '';
       document.getElementById('l8-btn').disabled = false;
-      document.getElementById('l8-input').focus();
+
+      // Exclude 0 and avoid operating on two positive numbers (pos + pos or pos - pos)
+      do {
+        l8Num1 = getRandomInt(-30, 30, true);
+        l8Num2 = getRandomInt(-30, 30, true);
+      } while (l8Num1 > 0 && l8Num2 > 0);
+
+      l8IsAdd = Math.random() < 0.5;
+
+      if (l8IsAdd) {
+        l8Target = l8Num1 + l8Num2;
+        document.getElementById('l8-statement').innerText = `${fmtNum(l8Num1)} + ${fmtNum(l8Num2)} = ?`;
+      } else {
+        l8Target = l8Num1 - l8Num2;
+        document.getElementById('l8-statement').innerText = `${fmtNum(l8Num1)} - ${fmtNum(l8Num2)} = ?`;
+      }
     }
 
     function checkL8(e) {
@@ -959,8 +1065,8 @@
       }
     }
 
-    // Initialize level locking & completion status on startup
-    updateProgressUI();
+    // Initialize Dashboard on Load
+    showDashboard();
   </script>
 </body>
 </html>
