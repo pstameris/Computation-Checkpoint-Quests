@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distributive Property Quest - 9 Levels</title>
+  <!-- Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+
+    /* Header & Navigation */
+    header { width: 100%; max-width: 860px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #334155; margin-bottom: 25px; flex-wrap: wrap; gap: 12px; }
+    h1 { font-size: 1.8rem; margin: 0; color: #38bdf8; display: flex; align-items: center; gap: 10px; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nav-btn { background: #334155; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+    .nav-btn:hover { background: #475569; }
+    .nav-btn:active { transform: scale(0.97); }
+    .scratch-btn { background: #8b5cf6; }
+    .scratch-btn:hover { background: #7c3aed; }
+    .save-btn { background: #059669; }
+    .save-btn:hover { background: #10b981; }
+    .reset-btn { background: #dc2626; }
+    .reset-btn:hover { background: #ef4444; }
+
+    /* Views */
+    .view { width: 100%; max-width: 820px; display: none; }
+    .view.active { display: block; }
+
+    /* Dashboard Grid */
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    .level-card { background: #1e293b; padding: 20px; border-radius: 16px; border: 2px solid #334155; cursor: pointer; transition: all 0.2s ease-in-out; text-align: left; position: relative; }
+    .level-card.unlocked { border-color: #38bdf8; opacity: 1; }
+    .level-card.unlocked:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(56, 189, 248, 0.2); }
+    .level-card.completed { border-color: #10b981; background: rgba(16, 185, 129, 0.08); opacity: 1; }
+    .level-card.completed:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25); }
+    .level-card h3 { margin: 0 0 8px 0; color: #38bdf8; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+    .level-card.completed h3 { color: #34d399; }
+    .level-card p { margin: 0; color: #94a3b8; font-size: 0.88rem; line-height: 1.4; }
+
+    /* Status Badges */
+    .status-tag { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; }
+    .status-tag.completed-tag { background: #16a34a; color: white; }
+    .status-tag.unlocked-tag { background: #0284c7; color: white; }
+
+    /* Game Cards */
+    .game-card { background: #1e293b; padding: 28px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+    .header-badges { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .badge { background: #334155; color: #94a3b8; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Star Streak Tracker & Grace Badge */
+    .streak-badge { background: #0f172a; border: 1px solid #334155; padding: 4px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+    .star { font-size: 1.3rem; line-height: 1; transition: all 0.3s ease; display: inline-block; }
+    .star.empty { color: #475569; }
+    .star.filled { color: #facc15; text-shadow: 0 0 8px rgba(250, 204, 21, 0.6); transform: scale(1.15); }
+    .grace-indicator { background: #0284c7; color: #ffffff; font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; font-weight: bold; margin-left: 6px; }
+
+    .statement-box { margin: 20px 0 15px 0; font-size: 2.2rem; font-weight: 800; color: #38bdf8; letter-spacing: 1px; word-break: break-word; }
+    .instructions { color: #cbd5e1; font-size: 1rem; margin-bottom: 20px; min-height: 24px; line-height: 1.5; }
+
+    /* Dashed Distributive Highlight Box */
+    .distributive-highlight {
+      border: 3px dashed #facc15;
+      border-radius: 14px;
+      padding: 4px 12px;
+      display: inline-block;
+      background: rgba(250, 204, 21, 0.05);
+      margin: 0 4px;
+    }
+
+    /* Term Cards */
+    .term-card {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 20px;
+      font-weight: 800;
+      border-radius: 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s, background-color 0.2s;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+      margin: 6px;
+      font-size: 1.35rem;
+      color: #ffffff;
+    }
+    .term-card:active { transform: scale(1.05); }
+    .term-card.card-pos { background-color: #10b981; border: 2px solid #34d399; }
+    .term-card.card-neg { background-color: #ef4444; border: 2px solid #f87171; }
+
+    /* Card Banks & Slots */
+    .cards-bank { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; background: #0f172a; padding: 16px; border-radius: 14px; min-height: 90px; margin-bottom: 20px; border: 2px dashed #334155; transition: all 0.2s; }
+    .cards-bank.drag-over { border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+
+    .drop-slot {
+      min-width: 100px;
+      height: 60px;
+      border: 2px dashed #38bdf8;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.6);
+      margin: 4px;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    /* Inputs */
+    .solve-input { width: 280px; height: 55px; font-size: 1.6rem; font-weight: 800; text-align: center; border-radius: 12px; border: 3px solid #00a8ff; background: #0a101d; color: white; outline: none; transition: border-color 0.2s; margin: 5px; }
+    .solve-input:focus { border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
+
+    /* L2 3-Box Grid */
+    .boxes-3-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .sorting-box { min-height: 140px; border-radius: 14px; border: 2.5px dashed; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; background: rgba(15, 23, 42, 0.6); transition: all 0.2s; cursor: pointer; }
+    .sorting-box.x-box { border-color: #38bdf8; }
+    .sorting-box.y-box { border-color: #c084fc; }
+    .sorting-box.c-box { border-color: #4ade80; }
+    .sorting-box.drag-over { background: rgba(255, 255, 255, 0.1); border-style: solid; transform: scale(1.02); }
+    .box-title { font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; pointer-events: none; }
+
+    /* Embedded On-Screen Scratchpad */
+    .embedded-scratchpad { margin: 20px 0; background: #090d16; border: 2px solid #8b5cf6; border-radius: 16px; padding: 15px; text-align: center; }
+    .scratch-controls { display: flex; gap: 10px; justify-content: center; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+
+    /* Buttons & Feedback */
+    .btn-group { display: flex; justify-content: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+    button.action-btn { padding: 12px 28px; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; color: white; background: #2563eb; }
+    button.action-btn:hover { background: #1d4ed8; }
+    button.action-btn:active { transform: scale(0.97); }
+
+    .feedback { font-size: 1.3rem; font-weight: bold; min-height: 48px; margin-top: 15px; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .correct-text { color: #4ade80; }
+    .incorrect-text { color: #f87171; }
+    .grace-text { color: #facc15; }
+    .complete-text { color: #facc15; animation: pulse 0.5s ease-in-out infinite alternate; font-size: 1.8rem; }
+
+    /* Scratchpad Modal */
+    #scratchpad-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; padding: 15px; }
+    #scratchpad-modal.active { display: flex; }
+    .scratch-header { width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 10px; }
+    .scratch-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .scratch-tool-btn { background: #334155; color: white; border: 2px solid transparent; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .scratch-tool-btn.active { border-color: #38bdf8; background: #0284c7; }
+    .color-swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #ffffff; cursor: pointer; transition: transform 0.2s; }
+    .color-swatch:hover { transform: scale(1.2); }
+    canvas { background: #020617; border-radius: 12px; cursor: crosshair; touch-action: none; max-width: 100%; }
+
+    /* Save Toast */
+    #save-toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; }
+
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.08); } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🧪 Distributive Property Quest</h1>
+    <div class="header-actions">
+      <button class="nav-btn scratch-btn" onclick="toggleScratchpad()">✏️ Scratchpad</button>
+      <button class="nav-btn save-btn" onclick="manualSaveProgress()">💾 Save</button>
+      <button class="nav-btn reset-btn" onclick="resetProgress()">🔄 Reset</button>
+      <button class="nav-btn" onclick="showDashboard()">Level Select</button>
+    </div>
+  </header>
+
+  <div id="save-toast">Progress Saved! 💾</div>
+
+  <!-- SCRATCHPAD MODAL -->
+  <div id="scratchpad-modal">
+    <div class="scratch-header">
+      <h3 style="margin:0; color:#38bdf8;">✏️ Interactive Scratchpad Canvas</h3>
+      <div class="scratch-tools">
+        <button class="scratch-tool-btn active" id="tool-pen" onclick="setScratchTool('pen')">Pen</button>
+        <button class="scratch-tool-btn" id="tool-eraser" onclick="setScratchTool('eraser')">Eraser</button>
+        <div class="color-swatch" style="background:#ffffff;" onclick="setScratchColor('#ffffff')"></div>
+        <div class="color-swatch" style="background:#facc15;" onclick="setScratchColor('#facc15')"></div>
+        <div class="color-swatch" style="background:#38bdf8;" onclick="setScratchColor('#38bdf8')"></div>
+        <div class="color-swatch" style="background:#f87171;" onclick="setScratchColor('#f87171')"></div>
+        <button class="scratch-tool-btn" onclick="clearModalScratchpad()">Clear</button>
+        <button class="scratch-tool-btn" style="background:#dc2626;" onclick="toggleScratchpad()">Close</button>
+      </div>
+    </div>
+    <canvas id="scratch-canvas" width="780" height="480"></canvas>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="dashboard-view" class="view active">
+    <div class="menu-grid">
+      <div id="card-l1" class="level-card" onclick="startLevel(1)">
+        <h3>Level 1: 2-Term Basic Combine <span id="tag-l1"></span></h3>
+        <p>Combine terms! Guaranteed at least one negative card in every problem.</p>
+      </div>
+      <div id="card-l2" class="level-card" onclick="startLevel(2)">
+        <h3>Level 2: 3-Box Drag & Drop Sorting <span id="tag-l2"></span></h3>
+        <p>Sort 6 cards into X, Y, and Constant boxes (+ terms include + sign, clean -x/-y).</p>
+      </div>
+      <div id="card-l3" class="level-card" onclick="startLevel(3)">
+        <h3>Level 3: Card Placement & Simplify <span id="tag-l3"></span></h3>
+        <p>Match cards under 5 terms, then write simplified expression.</p>
+      </div>
+      <div id="card-l4" class="level-card" onclick="startLevel(4)">
+        <h3>Level 4: 5-Term Combination <span id="tag-l4"></span></h3>
+        <p>Combine 5-term expressions using the mandatory scratchpad workspace!</p>
+      </div>
+      <div id="card-l5" class="level-card" onclick="startLevel(5)">
+        <h3>Level 5: Positive Distribute <span id="tag-l5"></span></h3>
+        <p>Step 1: Place 2 matching cards for positive distributive expansion. Step 2: Write simplified expression!</p>
+      </div>
+      <div id="card-l6" class="level-card" onclick="startLevel(6)">
+        <h3>Level 6: Distribute & Combine (+) <span id="tag-l6"></span></h3>
+        <p>Step 1: Check card placement into boxes. Step 2: Combine like terms!</p>
+      </div>
+      <div id="card-l7" class="level-card" onclick="startLevel(7)">
+        <h3>Level 7: Negative Distribute <span id="tag-l7"></span></h3>
+        <p>Step 1: Place 2 matching cards for negative distributive expansion. Step 2: Write simplified expression!</p>
+      </div>
+      <div id="card-l8" class="level-card" onclick="startLevel(8)">
+        <h3>Level 8: Distribute & Combine (-) <span id="tag-l8"></span></h3>
+        <p>Step 1: Check negative factor card placement. Step 2: Combine like terms!</p>
+      </div>
+      <div id="card-l9" class="level-card" onclick="startLevel(9)">
+        <h3>Level 9: Multi-Step Master Quest <span id="tag-l9"></span></h3>
+        <p>Solve 4-term expressions (2 individual terms + 1 distributive property) with scratchpad.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEVEL 1 -->
+  <div id="level1-view" class="view">
+    <div class="game-card">
+      <div class="header-badges"><span class="badge">Level 1</span><div id="l1-streak-tag" class="streak-badge"></div></div>
+      <p class="instructions">Combine the two cards below! Positive cards are <strong>green (+)</strong>, negative cards are <strong>red (-)</strong>.</p>
+      <div class="cards-bank" id="l1-cards-container" style="border:none; background:transparent;"></div>
+      <form onsubmit="checkL1(event)">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px;">
+          <label style="font-size: 1.6rem; font-weight: bold;">Combine:</label>
+          <input type="text" id="l1-input" class="solve-input" placeholder="e.g. 2x" required autocomplete="off" autofocus />
+        </div>
+        <button type="submit" id="l1-btn" class="action-btn">Submit</button>
+      </form>
+      <div id="l1-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- LEVEL 2 -->
+  <div id="level2-view" class="view">
+    <div class="game-card">
+      <div class="header-badges"><span class="badge">Level 2</span><div id="l2-streak-tag" class="streak-badge"></div></div>
+      <p class="instructions">Sort all 6 cards into their matching box (X-Terms, Y-Terms, or Constants), then combine!</p>
+      <div id="l2-pool" class="cards-bank" data-drop-zone="pool" ondragover="allowDrop(event)" ondrop="handleDropGeneric(event, 'l2-pool')"></div>
+      <div class="boxes-3-grid">
+        <div id="l2-box-x" class="sorting-box x-box" data-drop-zone="x" ondragover="allowDrop(event)" ondrop="handleDropGeneric(event, 'l2-box-x-items')">
+          <div class="box-title" style="color:#38bdf8;">X-Terms Box</div>
+          <div id="l2-box-x-items" style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center; width:100%; min-height:80px;"></div>
+        </div>
+        <div id="l2-box-y" class="sorting-box y-box" data-drop-zone="y" ondragover="allowDrop(event)" ondrop="handleDropGeneric(event, 'l2-box-y-items')">
+          <div class="box-title" style="color:#c084fc;">Y-Terms Box</div>
+          <div id="l2-box-y-items" style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center; width:100%; min-height:80px;"></div>
+        </div>
+        <div id="l2-box-c" class="sorting-box c-box" data-drop-zone="c" ondragover="allowDrop(event)" ondrop="handleDropGeneric(event, 'l2-box-c-items')">
+          <div class="box-title" style="color:#4ade80;">Constants Box</div>
+          <div id="l2-box-c-items" style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center; width:100%; min-height:80px;"></div>
+        </div>
+      </div>
+      <form onsubmit="checkL2(event)">
+        <label style="font-size:1.2rem; font-weight:700; margin-right:8px;">Final Combined Expression:</label>
+        <input type="text" id="l2-input" class="solve-input" placeholder="e.g. 2x - 3y + 5" required autocomplete="off" />
+        <br><br><button type="submit" id="l2-btn" class="action-btn">Submit Answer</button>
+      </form>
+      <div id="l2-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- LEVEL 3 -->
+  <div id="level3-view" class="view">
+    <div class="game-card">
+      <div class="header-badges"><span class="badge">Level 3</span><div id="l3-streak-tag" class="streak-badge"></div></div>
+      <p class="instructions">Step 1: Place each correct card from the pool into the matching box under each term.</p>
+      <div id="l3-statement" class="statement-box"></div>
+      <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;" id="l3-slots-container"></div>
+      <p style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">Card Pool (5 Correct + 5 Distractors):</p>
+      <div id="l3-pool" class="cards-bank" data-drop-zone="pool" ondragover="allowDrop(event)" ondrop="handleDropGeneric(event, 'l3-pool')"></div>
+      <div id="l3-step1-actions" style="margin-bottom: 15px;">
+        <button type="button" id="l3-check-cards-btn" class="action-btn" onclick="checkL3Cards()">Check Cards</button>
+      </div>
+      <div id="l3-step2-container" style="display: none; border-top: 2px dashed #334155; padding-top: 20px; margin-top: 20px;">
+        <p class="instructions" style="color: #38bdf8; font-weight: bold; font-size: 1.15rem;">Step 2: Write the simplified value below (x first, then y, then constant #):</p>
+        <form onsubmit="checkL3Final(event)">
+          <input type="text" id="l3-input" class="solve-input" placeholder="e.g. 3x + y - 9" required autocomplete="off" />
+          <br><br>
+          <button type="submit" id="l3-btn" class="action-btn">Submit Final Answer</button>
+        </form>
+      </div>
+      <div id="l3-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- LEVEL 4 -->
+  <div id="level4-view" class="view">
+    <div class="game-card">
+      <div class="header-badges"><span class="badge">Level 4</span><div id="l4-streak-tag" class="streak-badge"></div></div>
+      <p class="instructions">Combine all <strong>5 terms</strong> into simplified form! Use the mandatory Scratchpad workspace below.</p>
+      <div id="l4-statement" class="statement-box"></div>
+      <div class="embedded-scratchpad">
+        <p style="margin:0 0 8px 0; color:#c084fc; font-weight:bold;">✏️ Mandatory Working Scratchpad</p>
+        <div class="scratch-controls">
+          <button class="scratch-tool-btn active" id="l4-tool-pen" onclick="setEmbedTool(4, 'pen')">Pen</button>
+          <button class="scratch-tool-btn" id="l4-tool-eraser" onclick="setEmbedTool(4, 'eraser')">Eraser</button>
+          <button class="scratch-tool-btn" onclick="clearEmbedScratchpad(4)">Clear Work</button>
+        </div>
+        <canvas id="scratch-canvas-l4" width="700" height="220"></canvas>
+      </div>
+      <form onsubmit="checkL4(event)">
+        <input type="text" id="l4-input" class="solve-input" placeholder="e.g. 2x - 4y + 3" required autocomplete="off" />
+        <br><br><button type="submit" id="l4-btn" class="action-btn">Submit Answer</button>
+      </form>
+      <div id="l4-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- LEVEL 5 -->
+  <div id="level5-view" class="view">
+    <div class="game-card">
+      <div class="header-badges"><span class="badge">Level 5</span><div id="l5-streak-tag" class="streak-badge"></div></div>
+      <p class="instructions">Step 1: Distribute the positive factor and place the <strong>2 expanded cards</strong> into the slots.</p>
+      <div id="l5-statement" class="statement-box"></div>
+      <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 20px;" id="l5-slots-container"></div>
+      <p style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">Choose 2 Cards (6 Total):</p>
+      <div id="l5-pool" class="cards-bank" data-drop-zone="pool" ondragover="allowDrop(event)" ondrop="handleDropGeneric(event, 'l5-pool')"></div>
+      
+      <div id="l5-step1-actions" style="margin-bottom: 15px;">
+        <button type="button" id="l5-check-cards-btn" class="action-btn" onclick="checkL5Cards()">Check Cards</button>
+      </div>
+
+      <div id="l5-step2-container" style="display: none; border-top: 2px dashed #334155; padding-top: 20px; margin-top: 20px;">
+        <p class="instructions" style="color: #38bdf8; font-weight: bold; font-size: 1.15rem;">Step 2: Write the simplified expanded expression below:</p>
+        <form onsubmit="checkL5Final(event)">
+          <input type="text" id="l5-input" class="solve-input" placeholder="e.g. 6x - 12" required autocomplete="off" />
+          <br><br>
+          <button type="submit" id="l5-btn" class="action-btn">Submit Final Answer</button>
+        </form>
+      </div>
+
+      <div id="l5-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- LEVEL 6 -->
+  <div id="level6-view" class="view">
+    <div class="game-card">
+      <div class="header-badges"><span class="badge">Level 6</span><div id="l6-streak-tag" class="streak-badge"></div></div>
+      <p class="instructions">Step 1: Expand the highlighted block and place all <strong>4 term cards</strong> into the boxes.</p>
+      <div id="l6-statement" class="statement-box"></div>
+      <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;" id="l6-slots-container"></div>
+      <p style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">Select & Drag Cards (Pool of 10):</p>
+      <div id="l6-pool" class="cards-bank" data-drop-zone="pool" ondragover="allowDrop(event)" ondrop="handleDropGeneric(event, 'l6-pool')"></div>
+      
+      <div id="l6-step1-actions" style="margin-bottom: 15px;">
+        <button type="button" id="l6-check-cards-btn" class="action-btn" onclick="checkL6Cards()">Check Cards</button>
+      </div>
+
+      <div id="l6-step2-container" style="display: none; border-top: 2px dashed #334155; padding-top: 20px; margin-top: 20px;">
+        <p class="instructions" style="color: #38bdf8; font-weight: bold; font-size: 1.15rem;">Step 2: Combine like terms and write the simplified answer below:</p>
+        <form onsubmit="checkL6Final(event)">
+          <input type="text" id="l6-input" class="solve-input" placeholder="e.g. 4x + 7" required autocomplete="off" />
+          <br><br>
+          <button type="submit" id="l6-btn" class="action-btn">Submit Final Answer</button>
+        </form>
+      </div>
+
+      <div id="l6-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- LEVEL 7 -->
+  <div id="level7-view" class="view">
+    <div class="game-card">
+      <div class="header-badges"><span class="badge">Level 7</span><div id="l7-streak-tag" class="streak-badge"></div></div>
+      <p class="instructions">Step 1: Distribute the <strong>negative factor</strong> outside parentheses and place the 2 correct cards into the slots.</p>
+      <div id="l7-statement" class="statement-box"></div>
+      <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 20px;" id="l7-slots-container"></div>
+      <p style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">Choose 2 Cards (6 Total):</p>
+      <div id="l7-pool" class="cards-bank" data-drop-zone="pool" ondragover="allowDrop(event)" ondrop="handleDropGeneric(event, 'l7-pool')"></div>
+      
+      <div id="l7-step1-actions" style="margin-bottom: 15px;">
+        <button type="button" id="l7-check-cards-btn" class="action-btn" onclick="checkL7Cards()">Check Cards</button>
+      </div>
+
+      <div id="l7-step2-container" style="display: none; border-top: 2px dashed #334155; padding-top: 20px; margin-top: 20px;">
+        <p class="instructions" style="color: #38bdf8; font-weight: bold; font-size: 1.15rem;">Step 2: Write the simplified expanded expression below:</p>
+        <form onsubmit="checkL7Final(event)">
+          <input type="text" id="l7-input" class="solve-input" placeholder="e.g. -3x + 6" required autocomplete="off" />
+          <br><br>
+          <button type="submit" id="l7-btn" class="action-btn">Submit Final Answer</button>
+        </form>
+      </div>
+
+      <div id="l7-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- LEVEL 8 -->
+  <div id="level8-view" class="view">
+    <div class="game-card">
+      <div class="header-badges"><span class="badge">Level 8</span><div id="l8-streak-tag" class="streak-badge"></div></div>
+      <p class="instructions">Step 1: Distribute the <strong>negative factor</strong> block and place all <strong>4 term cards</strong> into the boxes.</p>
+      <div id="l8-statement" class="statement-box"></div>
+      <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;" id="l8-slots-container"></div>
+      <p style="color: #cbd5e1; font-weight: 600; margin-bottom: 8px;">Select & Drag Cards (Pool of 10):</p>
+      <div id="l8-pool" class="cards-bank" data-drop-zone="pool" ondragover="allowDrop(event)" ondrop="handleDropGeneric(event, 'l8-pool')"></div>
+      
+      <div id="l8-step1-actions" style="margin-bottom: 15px;">
+        <button type="button" id="l8-check-cards-btn" class="action-btn" onclick="checkL8Cards()">Check Cards</button>
+      </div>
+
+      <div id="l8-step2-container" style="display: none; border-top: 2px dashed #334155; padding-top: 20px; margin-top: 20px;">
+        <p class="instructions" style="color: #38bdf8; font-weight: bold; font-size: 1.15rem;">Step 2: Combine like terms and write the simplified answer below:</p>
+        <form onsubmit="checkL8Final(event)">
+          <input type="text" id="l8-input" class="solve-input" placeholder="e.g. -x - 10" required autocomplete="off" />
+          <br><br>
+          <button type="submit" id="l8-btn" class="action-btn">Submit Final Answer</button>
+        </form>
+      </div>
+
+      <div id="l8-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- LEVEL 9 -->
+  <div id="level9-view" class="view">
+    <div class="game-card">
+      <div class="header-badges"><span class="badge">Level 9</span><div id="l9-streak-tag" class="streak-badge"></div></div>
+      <p class="instructions">Solve the multi-step expression! Show step-by-step work on the embedded Scratchpad below.</p>
+      <div id="l9-statement" class="statement-box"></div>
+
+      <div class="embedded-scratchpad">
+        <p style="margin:0 0 8px 0; color:#38bdf8; font-weight:bold;">✏️ Embedded Master Scratchpad</p>
+        <div class="scratch-controls">
+          <button class="scratch-tool-btn active" id="l9-tool-pen" onclick="setEmbedTool(9, 'pen')">Pen</button>
+          <button class="scratch-tool-btn" id="l9-tool-eraser" onclick="setEmbedTool(9, 'eraser')">Eraser</button>
+          <button class="scratch-tool-btn" onclick="clearEmbedScratchpad(9)">Clear Work</button>
+        </div>
+        <canvas id="scratch-canvas-l9" width="700" height="240"></canvas>
+      </div>
+
+      <form onsubmit="checkL9(event)">
+        <input type="text" id="l9-input" class="solve-input" placeholder="e.g. 11x - 15" required autocomplete="off" />
+        <br><br><button type="submit" id="l9-btn" class="action-btn">Submit Master Answer</button>
+      </form>
+
+      <div id="l9-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <script>
+    // GLOBAL STATE & TRACKING
+    const REQUIRED_STREAK = 5;
+    const TOTAL_LEVELS = 9;
+    const NO_GRACE_LEVELS = [1, 5, 7]; // Grace shield explicitly disabled for Levels 1, 5, and 7
+    let currentStreak = 0;
+    let currentLevel = 1;
+    let graceAvailable = true;
+    let completedLevels = new Set(JSON.parse(localStorage.getItem('aq_completed_levels') || '[]'));
+
+    // LEVEL PROBLEM DATA STORAGE
+    let l1Data = {}, l2Data = {}, l3Data = {}, l4Data = {}, l5Data = {}, l6Data = {}, l7Data = {}, l8Data = {}, l9Data = {};
+
+    function updateProgressUI() {
+      for (let lvl = 1; lvl <= TOTAL_LEVELS; lvl++) {
+        const card = document.getElementById(`card-l${lvl}`);
+        const tag = document.getElementById(`tag-l${lvl}`);
+        if (!card || !tag) continue;
+
+        const completed = completedLevels.has(lvl);
+        card.classList.remove('locked', 'unlocked', 'completed');
+
+        if (completed) {
+          card.classList.add('completed');
+          tag.innerHTML = '<span class="status-tag completed-tag">✅ Done</span>';
+        } else {
+          card.classList.add('unlocked');
+          tag.innerHTML = '<span class="status-tag unlocked-tag">🔓 Unlocked</span>';
+        }
+      }
+    }
+
+    function updateStreakDisplay() {
+      const tag = document.getElementById(`l${currentLevel}-streak-tag`);
+      if (tag) {
+        let starsHTML = '';
+        for (let i = 1; i <= REQUIRED_STREAK; i++) {
+          starsHTML += i <= currentStreak ? '<span class="star filled">★</span>' : '<span class="star empty">☆</span>';
+        }
+        if (graceAvailable && !NO_GRACE_LEVELS.includes(currentLevel)) {
+          starsHTML += ' <span class="grace-indicator" title="Streak protected for 1 mistake">🛡️ Grace Active</span>';
+        }
+        tag.innerHTML = starsHTML;
+      }
+    }
+
+    function markLevelComplete(lvl) {
+      completedLevels.add(lvl);
+      localStorage.setItem('aq_completed_levels', JSON.stringify(Array.from(completedLevels)));
+      updateProgressUI();
+    }
+
+    function manualSaveProgress() {
+      localStorage.setItem('aq_completed_levels', JSON.stringify(Array.from(completedLevels)));
+      const toast = document.getElementById('save-toast');
+      toast.innerText = 'Progress Saved! 💾';
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2000);
+    }
+
+    function resetProgress() {
+      if (confirm("Reset all level progress?")) {
+        completedLevels.clear();
+        localStorage.removeItem('aq_completed_levels');
+        updateProgressUI();
+        showDashboard();
+      }
+    }
+
+    function triggerConfetti() {
+      if (typeof confetti === 'function') confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+    }
+
+    function showDashboard() {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('dashboard-view').classList.add('active');
+      updateProgressUI();
+    }
+
+    function startLevel(lvl) {
+      currentLevel = lvl;
+      currentStreak = 0;
+      graceAvailable = !NO_GRACE_LEVELS.includes(lvl); // Grace shield disabled for Levels 1, 5, 7
+      updateStreakDisplay();
+
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(`level${lvl}-view`).classList.add('active');
+
+      const inits = [initL1, initL2, initL3, initL4, initL5, initL6, initL7, initL8, initL9];
+      if (inits[lvl - 1]) inits[lvl - 1]();
+    }
+
+    // Standard card formatting with explicit plus/minus signs
+    function formatTermCard(coeff, varName = '') {
+      if (coeff === 0) return varName ? `0${varName}` : '0';
+      
+      let signStr = coeff > 0 ? '+' : '-';
+      let absCoeff = Math.abs(coeff);
+      let coeffStr = '';
+      
+      if (varName) {
+        coeffStr = (absCoeff === 1) ? '' : `${absCoeff}`;
+      } else {
+        coeffStr = `${absCoeff}`;
+      }
+      return `${signStr}${coeffStr}${varName}`;
+    }
+
+    // Expression statement formatting: NO plus sign if 1st term is positive!
+    function formatTermForStatement(coeff, varName = '', isFirst = false) {
+      if (coeff === 0) return varName ? `0${varName}` : '0';
+      let absCoeff = Math.abs(coeff);
+      let termStr = '';
+      if (varName) {
+        termStr = (absCoeff === 1) ? varName : `${absCoeff}${varName}`;
+      } else {
+        termStr = `${absCoeff}`;
+      }
+
+      if (isFirst) {
+        return coeff < 0 ? `-${termStr}` : `${termStr}`;
+      } else {
+        return coeff < 0 ? `- ${termStr}` : `+ ${termStr}`;
+      }
+    }
+
+    // Position probability calculator: 1st term (20%), 2nd term (40%), 3rd/last term (40%)
+    function selectDistPosition() {
+      let rand = Math.random();
+      if (rand < 0.20) return 1;
+      if (rand < 0.60) return 2;
+      return 3;
+    }
+
+    // Helper to check set equality of placed cards vs required cards regardless of slot order
+    function areCardSetsEqual(placedArray, requiredArray) {
+      if (!placedArray || !requiredArray || placedArray.length !== requiredArray.length) return false;
+      let p = [...placedArray].map(s => s.trim()).sort();
+      let r = [...requiredArray].map(s => s.trim()).sort();
+      return p.every((val, idx) => val === r[idx]);
+    }
+
+    let globalCardIdCounter = 0;
+    function createCardElement(text, id = null, extraClasses = '') {
+      const card = document.createElement('div');
+      card.className = `term-card ${text.startsWith('+') ? 'card-pos' : 'card-neg'} ${extraClasses}`;
+      card.textContent = text;
+      card.id = id || `card-el-${++globalCardIdCounter}`;
+      card.setAttribute('draggable', 'true');
+
+      card.ondragstart = (e) => {
+        e.dataTransfer.setData('text/plain', card.id);
+      };
+
+      card.onclick = (e) => {
+        e.stopPropagation();
+        handleCardClickMove(card);
+      };
+
+      return card;
+    }
+
+    function handleCardClickMove(card) {
+      const parent = card.parentElement;
+      if (!parent) return;
+
+      if (parent.classList.contains('drop-slot') || parent.id.includes('box')) {
+        const pool = document.getElementById(`l${currentLevel}-pool`);
+        if (pool) pool.appendChild(card);
+        return;
+      }
+
+      const slots = document.querySelectorAll(`#level${currentLevel}-view .drop-slot`);
+      for (let slot of slots) {
+        if (slot.children.length === 0) {
+          slot.appendChild(card);
+          return;
+        }
+      }
+    }
+
+    function parseAlgebra(expr) {
+      if (!expr) return null;
+      let clean = expr.replace(/\s+/g, '').replace(/--/g, '+').replace(/\+-/g, '-').replace(/-\+/g, '-');
+      let regex = /([+-]?\d*)([a-zA-Z])?/g;
+      let match;
+      let map = { x: 0, y: 0, c: 0 };
+      
+      while ((match = regex.exec(clean)) !== null) {
+        if (match.index === regex.lastIndex) {
+          regex.lastIndex++;
+          continue;
+        }
+        let str = match[0];
+        if (!str) continue;
+
+        let valStr = match[1];
+        let varStr = match[2];
+
+        let val = 0;
+        if (valStr === '' || valStr === '+') val = 1;
+        else if (valStr === '-') val = -1;
+        else val = parseInt(valStr, 10);
+
+        if (isNaN(val)) continue;
+
+        if (varStr === 'x') map.x += val;
+        else if (varStr === 'y') map.y += val;
+        else map.c += val;
+      }
+      return map;
+    }
+
+    function compareAlgebra(inputStr, targetMap) {
+      let userMap = parseAlgebra(inputStr);
+      if (!userMap) return false;
+      return userMap.x === (targetMap.x || 0) && userMap.y === (targetMap.y || 0) && userMap.c === (targetMap.c || 0);
+    }
+
+    function handleCorrectAnswer(fbEl, successMessage, nextInitFunc) {
+      currentStreak++;
+      if (!NO_GRACE_LEVELS.includes(currentLevel)) {
+        graceAvailable = true;
+      }
+      updateStreakDisplay();
+
+      if (currentStreak >= REQUIRED_STREAK) {
+        markLevelComplete(currentLevel);
+        triggerConfetti();
+        fbEl.className = 'feedback complete-text';
+        fbEl.innerHTML = `🌟 MASTERED! LEVEL ${currentLevel} COMPLETED! 🌟`;
+        
+        setTimeout(() => {
+          showDashboard();
+        }, 2000);
+      } else {
+        fbEl.className = 'feedback correct-text';
+        fbEl.innerHTML = `${successMessage} Streak: ${currentStreak}/${REQUIRED_STREAK}`;
+        setTimeout(nextInitFunc, 1200);
+      }
+    }
+
+    function handleIncorrectAnswer(fbEl, hint = "") {
+      if (graceAvailable && !NO_GRACE_LEVELS.includes(currentLevel)) {
+        graceAvailable = false;
+        updateStreakDisplay();
+        fbEl.className = 'feedback grace-text';
+        fbEl.innerHTML = `🛡️ Grace Used (1 Strike)! Streak protected at ${currentStreak}/${REQUIRED_STREAK}. Try again! ${hint ? '<br><small>' + hint + '</small>' : ''}`;
+      } else {
+        currentStreak = 0;
+        updateStreakDisplay();
+        fbEl.className = 'feedback incorrect-text';
+        fbEl.innerHTML = `❌ Incorrect! Streak reset to 0/5. ${hint ? '<br><small>' + hint + '</small>' : ''}`;
+      }
+    }
+
+    function allowDrop(e) { e.preventDefault(); }
+    function handleDropGeneric(e, targetContainerId) {
+      e.preventDefault();
+      const cardId = e.dataTransfer.getData('text/plain');
+      const card = document.getElementById(cardId);
+      const target = document.getElementById(targetContainerId);
+      if (card && target) {
+        if (target.classList.contains('drop-slot') && target.children.length > 0) {
+          const existing = target.children[0];
+          const pool = document.getElementById(`l${currentLevel}-pool`);
+          if (pool) pool.appendChild(existing);
+        }
+        target.appendChild(card);
+      }
+    }
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    function getRandomNonZero(min, max) {
+      let val = 0;
+      while (val === 0) val = getRandomInt(min, max);
+      return val;
+    }
+
+    // LEVEL 1
+    function initL1() {
+      const fb = document.getElementById('l1-feedback');
+      fb.innerHTML = '';
+      document.getElementById('l1-input').value = '';
+
+      let c1 = getRandomNonZero(-8, 8);
+      let c2 = getRandomNonZero(-8, 8);
+      if (c1 > 0 && c2 > 0) c1 = -c1;
+
+      let varType = ['x', 'y', ''][getRandomInt(0, 2)];
+      let card1Text = formatTermCard(c1, varType);
+      let card2Text = formatTermCard(c2, varType);
+
+      l1Data = { target: { x: varType==='x'? c1+c2:0, y: varType==='y'? c1+c2:0, c: varType===''? c1+c2:0 } };
+
+      const container = document.getElementById('l1-cards-container');
+      container.innerHTML = '';
+      container.appendChild(createCardElement(card1Text));
+      container.appendChild(createCardElement(card2Text));
+    }
+
+    function checkL1(e) {
+      e.preventDefault();
+      const val = document.getElementById('l1-input').value.trim();
+      const fb = document.getElementById('l1-feedback');
+      if (compareAlgebra(val, l1Data.target)) {
+        handleCorrectAnswer(fb, "🎉 Correct!", initL1);
+      } else {
+        handleIncorrectAnswer(fb, "Remember to watch the positive (+) and negative (-) signs carefully!");
+      }
+    }
+
+    // LEVEL 2
+    function initL2() {
+      document.getElementById('l2-feedback').innerHTML = '';
+      document.getElementById('l2-input').value = '';
+      document.getElementById('l2-box-x-items').innerHTML = '';
+      document.getElementById('l2-box-y-items').innerHTML = '';
+      document.getElementById('l2-box-c-items').innerHTML = '';
+
+      let vars = ['x', 'y', ''];
+      let counts = [3, 2, 1].sort(() => Math.random() - 0.5);
+      let terms = [];
+      
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < counts[i]; j++) {
+          terms.push({ c: getRandomNonZero(-7, 7), v: vars[i] });
+        }
+      }
+
+      terms.sort(() => Math.random() - 0.5);
+
+      let targetX = 0, targetY = 0, targetC = 0;
+      const pool = document.getElementById('l2-pool');
+      pool.innerHTML = '';
+
+      terms.forEach((t, idx) => {
+        if (t.v === 'x') targetX += t.c;
+        if (t.v === 'y') targetY += t.c;
+        if (t.v === '') targetC += t.c;
+        const text = formatTermCard(t.c, t.v);
+        const card = createCardElement(text, `l2-card-${idx}`);
+        card.dataset.var = t.v;
+        pool.appendChild(card);
+      });
+
+      l2Data = { target: { x: targetX, y: targetY, c: targetC } };
+    }
+
+    function checkL2(e) {
+      e.preventDefault();
+      const fb = document.getElementById('l2-feedback');
+      const val = document.getElementById('l2-input').value.trim();
+
+      const xItems = document.getElementById('l2-box-x-items').children;
+      const yItems = document.getElementById('l2-box-y-items').children;
+      const cItems = document.getElementById('l2-box-c-items').children;
+
+      let sortingCorrect = true;
+      for (let el of xItems) if (el.dataset.var !== 'x') sortingCorrect = false;
+      for (let el of yItems) if (el.dataset.var !== 'y') sortingCorrect = false;
+      for (let el of cItems) if (el.dataset.var !== '') sortingCorrect = false;
+
+      if (xItems.length + yItems.length + cItems.length < 6) {
+        handleIncorrectAnswer(fb, "Make sure all 6 cards are placed in the boxes!");
+        return;
+      }
+
+      if (!sortingCorrect) {
+        handleIncorrectAnswer(fb, "Check your card placement! Some cards are in the wrong term box.");
+        return;
+      }
+
+      if (compareAlgebra(val, l2Data.target)) {
+        handleCorrectAnswer(fb, "🎉 Perfectly sorted and combined!", initL2);
+      } else {
+        handleIncorrectAnswer(fb, "Cards are sorted, but check your combined answer calculation!");
+      }
+    }
+
+    // LEVEL 3
+    function initL3() {
+      document.getElementById('l3-feedback').innerHTML = '';
+      document.getElementById('l3-input').value = '';
+      document.getElementById('l3-step2-container').style.display = 'none';
+      document.getElementById('l3-step1-actions').style.display = 'block';
+
+      let terms;
+      do {
+        terms = [
+          { c: getRandomNonZero(-6, 6), v: 'x' }, { c: getRandomNonZero(-6, 6), v: 'x' },
+          { c: getRandomNonZero(-6, 6), v: 'y' }, { c: getRandomNonZero(-6, 6), v: 'y' },
+          { c: getRandomNonZero(-6, 6), v: '' }
+        ];
+        let posCount = terms.filter(t => t.c > 0).length;
+        let negCount = terms.filter(t => t.c < 0).length;
+        if (posCount >= 2 && negCount >= 2) break;
+      } while (true);
+
+      terms.sort(() => Math.random() - 0.5);
+
+      let targetX = 0, targetY = 0, targetC = 0;
+      let stmtHTML = '';
+      const slotsContainer = document.getElementById('l3-slots-container');
+      slotsContainer.innerHTML = '';
+
+      terms.forEach((t, i) => {
+        if (t.v === 'x') targetX += t.c;
+        if (t.v === 'y') targetY += t.c;
+        if (t.v === '') targetC += t.c;
+
+        let str = formatTermForStatement(t.c, t.v, i === 0);
+        stmtHTML += str + ' ';
+
+        const slot = document.createElement('div');
+        slot.className = 'drop-slot';
+        slot.id = `l3-slot-${i}`;
+        slot.dataset.expected = formatTermCard(t.c, t.v);
+        slot.ondragover = allowDrop;
+        slot.ondrop = (e) => handleDropGeneric(e, slot.id);
+        slotsContainer.appendChild(slot);
+      });
+
+      document.getElementById('l3-statement').innerHTML = stmtHTML;
+
+      let correctCards = terms.map(t => formatTermCard(t.c, t.v));
+      let distractorCards = [
+        formatTermCard(-getRandomNonZero(1, 6), 'x'), formatTermCard(getRandomNonZero(1, 6), 'y'),
+        formatTermCard(getRandomNonZero(1, 6), ''),  formatTermCard(-getRandomNonZero(1, 6), 'y'),
+        formatTermCard(-getRandomNonZero(1, 6), '')
+      ];
+      let poolCards = [...correctCards, ...distractorCards].sort(() => Math.random() - 0.5);
+
+      const pool = document.getElementById('l3-pool');
+      pool.innerHTML = '';
+      poolCards.forEach((txt, idx) => {
+        pool.appendChild(createCardElement(txt, `l3-card-${idx}`));
+      });
+
+      l3Data = { target: { x: targetX, y: targetY, c: targetC } };
+    }
+
+    function checkL3Cards() {
+      const fb = document.getElementById('l3-feedback');
+      let allCorrect = true;
+      for (let i = 0; i < 5; i++) {
+        const slot = document.getElementById(`l3-slot-${i}`);
+        if (slot.children.length === 0 || slot.children[0].textContent.trim() !== slot.dataset.expected) {
+          allCorrect = false;
+          break;
+        }
+      }
+
+      if (allCorrect) {
+        fb.className = 'feedback correct-text';
+        fb.innerHTML = '✅ Step 1 complete! Now combine the terms in Step 2.';
+        document.getElementById('l3-step1-actions').style.display = 'none';
+        document.getElementById('l3-step2-container').style.display = 'block';
+      } else {
+        handleIncorrectAnswer(fb, "Make sure every term above has its matching card directly below it!");
+      }
+    }
+
+    function checkL3Final(e) {
+      e.preventDefault();
+      const fb = document.getElementById('l3-feedback');
+      const val = document.getElementById('l3-input').value.trim();
+      if (compareAlgebra(val, l3Data.target)) {
+        handleCorrectAnswer(fb, "🎉 Level 3 Mastered!", initL3);
+      } else {
+        handleIncorrectAnswer(fb, "Check your calculations when combining the like terms!");
+      }
+    }
+
+    // LEVEL 4
+    function initL4() {
+      document.getElementById('l4-feedback').innerHTML = '';
+      document.getElementById('l4-input').value = '';
+      clearEmbedScratchpad(4);
+
+      let terms = [
+        { c: getRandomNonZero(-7, 7), v: 'x' }, { c: getRandomNonZero(-7, 7), v: 'x' },
+        { c: getRandomNonZero(-7, 7), v: 'y' }, { c: getRandomNonZero(-7, 7), v: 'y' },
+        { c: getRandomNonZero(-7, 7), v: '' }
+      ].sort(() => Math.random() - 0.5);
+
+      let targetX = 0, targetY = 0, targetC = 0;
+      let stmt = '';
+
+      terms.forEach((t, i) => {
+        if (t.v === 'x') targetX += t.c;
+        if (t.v === 'y') targetY += t.c;
+        if (t.v === '') targetC += t.c;
+
+        let str = formatTermForStatement(t.c, t.v, i === 0);
+        stmt += str + ' ';
+      });
+
+      document.getElementById('l4-statement').innerText = stmt;
+      l4Data = { target: { x: targetX, y: targetY, c: targetC } };
+    }
+
+    function checkL4(e) {
+      e.preventDefault();
+      const fb = document.getElementById('l4-feedback');
+      const val = document.getElementById('l4-input').value.trim();
+      if (compareAlgebra(val, l4Data.target)) {
+        handleCorrectAnswer(fb, "🎉 Excellent work!", initL4);
+      } else {
+        handleIncorrectAnswer(fb, "Use the scratchpad to group X terms, Y terms, and Constants!");
+      }
+    }
+
+    // LEVEL 5
+    function initL5() {
+      document.getElementById('l5-feedback').innerHTML = '';
+      document.getElementById('l5-input').value = '';
+      document.getElementById('l5-step2-container').style.display = 'none';
+      document.getElementById('l5-step1-actions').style.display = 'block';
+
+      let factor = getRandomInt(2, 5);
+      let inCoeff = getRandomNonZero(-5, 5);
+      let inConst = getRandomNonZero(-8, 8);
+      let varName = ['x', 'y'][getRandomInt(0, 1)];
+
+      let innerStr = `${formatTermForStatement(inCoeff, varName, true)} ${formatTermForStatement(inConst, '', false)}`;
+      document.getElementById('l5-statement').innerText = `${factor}(${innerStr})`;
+
+      let exp1 = formatTermCard(factor * inCoeff, varName);
+      let exp2 = formatTermCard(factor * inConst, '');
+
+      let slotsContainer = document.getElementById('l5-slots-container');
+      slotsContainer.innerHTML = '';
+      for (let i = 0; i < 2; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'drop-slot';
+        slot.id = `l5-slot-${i}`;
+        slot.ondragover = allowDrop;
+        slot.ondrop = (e) => handleDropGeneric(e, slot.id);
+        slotsContainer.appendChild(slot);
+      }
+
+      let requiredCards = [exp1, exp2];
+      let distractors = [
+        formatTermCard((factor + 1) * inCoeff, varName),
+        formatTermCard(factor + inConst, ''),
+        formatTermCard(-factor * inCoeff, varName),
+        formatTermCard(-factor * inConst, '')
+      ];
+      let poolCards = [...requiredCards, ...distractors].sort(() => Math.random() - 0.5);
+
+      const pool = document.getElementById('l5-pool');
+      pool.innerHTML = '';
+      poolCards.forEach((txt, idx) => pool.appendChild(createCardElement(txt, `l5-card-${idx}`)));
+
+      l5Data = {
+        requiredCards: requiredCards,
+        target: { x: varName==='x'? factor*inCoeff:0, y: varName==='y'? factor*inCoeff:0, c: factor*inConst }
+      };
+    }
+
+    function checkL5Cards() {
+      const fb = document.getElementById('l5-feedback');
+      const s0 = document.getElementById('l5-slot-0').textContent.trim();
+      const s1 = document.getElementById('l5-slot-1').textContent.trim();
+
+      if (s0 === '' || s1 === '') {
+        handleIncorrectAnswer(fb, "Make sure to place both expanded cards into the slots above!");
+        return;
+      }
+
+      let placed = [s0, s1];
+      if (!areCardSetsEqual(placed, l5Data.requiredCards)) {
+        handleIncorrectAnswer(fb, "Card Placement Error: Placed cards are incorrect! Multiply the outside factor into both terms.");
+        return;
+      }
+
+      fb.className = 'feedback correct-text';
+      fb.innerHTML = '✅ Step 1 complete! Cards placed correctly. Now write the simplified expression in Step 2.';
+      document.getElementById('l5-step1-actions').style.display = 'none';
+      document.getElementById('l5-step2-container').style.display = 'block';
+    }
+
+    function checkL5Final(e) {
+      e.preventDefault();
+      const fb = document.getElementById('l5-feedback');
+      const val = document.getElementById('l5-input').value.trim();
+
+      if (compareAlgebra(val, l5Data.target)) {
+        handleCorrectAnswer(fb, "🎉 Level 5 Mastered!", initL5);
+      } else {
+        handleIncorrectAnswer(fb, "Check your typed expanded expression calculation!");
+      }
+    }
+
+    // LEVEL 6
+    function initL6() {
+      document.getElementById('l6-feedback').innerHTML = '';
+      document.getElementById('l6-input').value = '';
+      document.getElementById('l6-step2-container').style.display = 'none';
+      document.getElementById('l6-step1-actions').style.display = 'block';
+
+      let pos = selectDistPosition();
+      let factor = getRandomInt(2, 4); // positive factor
+      let inCoeff = getRandomNonZero(-4, 4);
+      let inConst = getRandomNonZero(-6, 6);
+      let otherXCoeff = getRandomNonZero(-5, 5);
+      let otherConstVal = getRandomNonZero(-8, 8);
+
+      let exp1 = formatTermCard(factor * inCoeff, 'x');
+      let exp2 = formatTermCard(factor * inConst, '');
+      let termX = formatTermCard(otherXCoeff, 'x');
+      let termC = formatTermCard(otherConstVal, '');
+
+      let innerStr = `${formatTermForStatement(inCoeff, 'x', true)} ${formatTermForStatement(inConst, '', false)}`;
+      
+      let stmtHTML = '';
+      if (pos === 1) {
+        let distPart = `<span class="distributive-highlight">${factor}(${innerStr})</span>`;
+        let partX = formatTermForStatement(otherXCoeff, 'x', false);
+        let partC = formatTermForStatement(otherConstVal, '', false);
+        stmtHTML = `${distPart} ${partX} ${partC}`;
+      } else if (pos === 2) {
+        let partX = formatTermForStatement(otherXCoeff, 'x', true);
+        let distPart = `<span class="distributive-highlight">+ ${factor}(${innerStr})</span>`;
+        let partC = formatTermForStatement(otherConstVal, '', false);
+        stmtHTML = `${partX} ${distPart} ${partC}`;
+      } else {
+        let partX = formatTermForStatement(otherXCoeff, 'x', true);
+        let partC = formatTermForStatement(otherConstVal, '', false);
+        let distPart = `<span class="distributive-highlight">+ ${factor}(${innerStr})</span>`;
+        stmtHTML = `${partX} ${partC} ${distPart}`;
+      }
+
+      document.getElementById('l6-statement').innerHTML = stmtHTML;
+
+      let slotsContainer = document.getElementById('l6-slots-container');
+      slotsContainer.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'drop-slot';
+        slot.id = `l6-slot-${i}`;
+        slot.ondragover = allowDrop;
+        slot.ondrop = (e) => handleDropGeneric(e, slot.id);
+        slotsContainer.appendChild(slot);
+      }
+
+      let requiredCards = [termX, exp1, exp2, termC];
+
+      // Explicit variable-stripped distractors (e.g. +4 instead of +4x)
+      let distractors = [
+        formatTermCard(otherXCoeff, ''),      
+        formatTermCard(factor * inCoeff, ''), 
+        formatTermCard(-otherXCoeff, 'x'),
+        formatTermCard(-factor * inCoeff, 'x'),
+        formatTermCard(-factor * inConst, ''),
+        formatTermCard(-otherConstVal, '')
+      ];
+
+      let poolCards = [...requiredCards, ...distractors].sort(() => Math.random() - 0.5);
+
+      const pool = document.getElementById('l6-pool');
+      pool.innerHTML = '';
+      poolCards.forEach((txt, idx) => pool.appendChild(createCardElement(txt, `l6-card-${idx}`)));
+
+      l6Data = {
+        requiredCards: requiredCards,
+        target: { x: otherXCoeff + (factor * inCoeff), y: 0, c: (factor * inConst) + otherConstVal }
+      };
+    }
+
+    function checkL6Cards() {
+      const fb = document.getElementById('l6-feedback');
+      const slots = [
+        document.getElementById('l6-slot-0').textContent.trim(),
+        document.getElementById('l6-slot-1').textContent.trim(),
+        document.getElementById('l6-slot-2').textContent.trim(),
+        document.getElementById('l6-slot-3').textContent.trim()
+      ];
+
+      if (slots.some(s => s === '')) {
+        handleIncorrectAnswer(fb, "Make sure to place all 4 term cards into the boxes above!");
+        return;
+      }
+
+      // Check card placement!
+      if (!areCardSetsEqual(slots, l6Data.requiredCards)) {
+        handleIncorrectAnswer(fb, "Card Placement Error: Placed cards are incorrect! Make sure to select cards with variables (e.g., +4x, not just +4) and correct signs.");
+        return;
+      }
+
+      fb.className = 'feedback correct-text';
+      fb.innerHTML = '✅ Step 1 complete! Cards placed correctly. Now write the simplified expression in Step 2.';
+      document.getElementById('l6-step1-actions').style.display = 'none';
+      document.getElementById('l6-step2-container').style.display = 'block';
+    }
+
+    function checkL6Final(e) {
+      e.preventDefault();
+      const fb = document.getElementById('l6-feedback');
+      const val = document.getElementById('l6-input').value.trim();
+
+      if (compareAlgebra(val, l6Data.target)) {
+        handleCorrectAnswer(fb, "🎉 Level 6 Mastered!", initL6);
+      } else {
+        handleIncorrectAnswer(fb, "Check your final combined like terms calculation!");
+      }
+    }
+
+    // LEVEL 7
+    function initL7() {
+      document.getElementById('l7-feedback').innerHTML = '';
+      document.getElementById('l7-input').value = '';
+      document.getElementById('l7-step2-container').style.display = 'none';
+      document.getElementById('l7-step1-actions').style.display = 'block';
+
+      let factor = -getRandomInt(1, 5);
+      let inCoeff = getRandomNonZero(-5, 5);
+      let inConst = getRandomNonZero(-8, 8);
+
+      let innerStr = `${formatTermForStatement(inCoeff, 'x', true)} ${formatTermForStatement(inConst, '', false)}`;
+      document.getElementById('l7-statement').innerText = `${factor === -1 ? '-' : factor}(${innerStr})`;
+
+      let exp1 = formatTermCard(factor * inCoeff, 'x');
+      let exp2 = formatTermCard(factor * inConst, '');
+
+      let slotsContainer = document.getElementById('l7-slots-container');
+      slotsContainer.innerHTML = '';
+      for (let i = 0; i < 2; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'drop-slot';
+        slot.id = `l7-slot-${i}`;
+        slot.ondragover = allowDrop;
+        slot.ondrop = (e) => handleDropGeneric(e, slot.id);
+        slotsContainer.appendChild(slot);
+      }
+
+      let requiredCards = [exp1, exp2];
+      let distractors = [
+        formatTermCard(-factor * inCoeff, 'x'),
+        formatTermCard(-factor * inConst, ''),
+        formatTermCard(factor * Math.abs(inCoeff), 'x'),
+        formatTermCard(-Math.abs(inConst), '')
+      ];
+      let poolCards = [...requiredCards, ...distractors].sort(() => Math.random() - 0.5);
+
+      const pool = document.getElementById('l7-pool');
+      pool.innerHTML = '';
+      poolCards.forEach((txt, idx) => pool.appendChild(createCardElement(txt, `l7-card-${idx}`)));
+
+      l7Data = {
+        requiredCards: requiredCards,
+        target: { x: factor * inCoeff, y: 0, c: factor * inConst }
+      };
+    }
+
+    function checkL7Cards() {
+      const fb = document.getElementById('l7-feedback');
+      const s0 = document.getElementById('l7-slot-0').textContent.trim();
+      const s1 = document.getElementById('l7-slot-1').textContent.trim();
+
+      if (s0 === '' || s1 === '') {
+        handleIncorrectAnswer(fb, "Make sure to place both expanded cards into the slots above!");
+        return;
+      }
+
+      let placed = [s0, s1];
+      if (!areCardSetsEqual(placed, l7Data.requiredCards)) {
+        handleIncorrectAnswer(fb, "Remember: multiplying two negative numbers creates a positive (+)! Check your cards.");
+        return;
+      }
+
+      fb.className = 'feedback correct-text';
+      fb.innerHTML = '✅ Step 1 complete! Cards placed correctly. Now write the simplified expression in Step 2.';
+      document.getElementById('l7-step1-actions').style.display = 'none';
+      document.getElementById('l7-step2-container').style.display = 'block';
+    }
+
+    function checkL7Final(e) {
+      e.preventDefault();
+      const fb = document.getElementById('l7-feedback');
+      const val = document.getElementById('l7-input').value.trim();
+
+      if (compareAlgebra(val, l7Data.target)) {
+        handleCorrectAnswer(fb, "🎉 Level 7 Mastered!", initL7);
+      } else {
+        handleIncorrectAnswer(fb, "Check your typed answer for proper positive (+) or negative (-) signs.");
+      }
+    }
+
+    // LEVEL 8
+    function initL8() {
+      document.getElementById('l8-feedback').innerHTML = '';
+      document.getElementById('l8-input').value = '';
+      document.getElementById('l8-step2-container').style.display = 'none';
+      document.getElementById('l8-step1-actions').style.display = 'block';
+
+      let pos = selectDistPosition();
+      let factor = -getRandomInt(2, 4); // negative factor
+      let inCoeff = getRandomNonZero(-4, 4);
+      let inConst = getRandomNonZero(-6, 6);
+      let otherXCoeff = getRandomNonZero(-6, 6);
+      let otherConstVal = getRandomNonZero(-8, 8);
+
+      let exp1 = formatTermCard(factor * inCoeff, 'x');
+      let exp2 = formatTermCard(factor * inConst, '');
+      let termX = formatTermCard(otherXCoeff, 'x');
+      let termC = formatTermCard(otherConstVal, '');
+
+      let innerStr = `${formatTermForStatement(inCoeff, 'x', true)} ${formatTermForStatement(inConst, '', false)}`;
+      let factorStr = factor === -1 ? '-' : `${factor}`;
+
+      let stmtHTML = '';
+      if (pos === 1) {
+        let distPart = `<span class="distributive-highlight">${factorStr}(${innerStr})</span>`;
+        let partX = formatTermForStatement(otherXCoeff, 'x', false);
+        let partC = formatTermForStatement(otherConstVal, '', false);
+        stmtHTML = `${distPart} ${partX} ${partC}`;
+      } else if (pos === 2) {
+        let partX = formatTermForStatement(otherXCoeff, 'x', true);
+        let distPart = `<span class="distributive-highlight">${factorStr}(${innerStr})</span>`;
+        let partC = formatTermForStatement(otherConstVal, '', false);
+        stmtHTML = `${partX} ${distPart} ${partC}`;
+      } else {
+        let partX = formatTermForStatement(otherXCoeff, 'x', true);
+        let partC = formatTermForStatement(otherConstVal, '', false);
+        let distPart = `<span class="distributive-highlight">${factorStr}(${innerStr})</span>`;
+        stmtHTML = `${partX} ${partC} ${distPart}`;
+      }
+
+      document.getElementById('l8-statement').innerHTML = stmtHTML;
+
+      let slotsContainer = document.getElementById('l8-slots-container');
+      slotsContainer.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'drop-slot';
+        slot.id = `l8-slot-${i}`;
+        slot.ondragover = allowDrop;
+        slot.ondrop = (e) => handleDropGeneric(e, slot.id);
+        slotsContainer.appendChild(slot);
+      }
+
+      let requiredCards = [termX, exp1, exp2, termC];
+
+      // Explicit variable-stripped distractors (e.g. +4 instead of +4x)
+      let distractors = [
+        formatTermCard(otherXCoeff, ''),      
+        formatTermCard(factor * inCoeff, ''), 
+        formatTermCard(-otherXCoeff, 'x'),
+        formatTermCard(-factor * inCoeff, 'x'),
+        formatTermCard(-factor * inConst, ''),
+        formatTermCard(-otherConstVal, '')
+      ];
+
+      let poolCards = [...requiredCards, ...distractors].sort(() => Math.random() - 0.5);
+
+      const pool = document.getElementById('l8-pool');
+      pool.innerHTML = '';
+      poolCards.forEach((txt, idx) => pool.appendChild(createCardElement(txt, `l8-card-${idx}`)));
+
+      l8Data = {
+        requiredCards: requiredCards,
+        target: { x: otherXCoeff + (factor * inCoeff), y: 0, c: (factor * inConst) + otherConstVal }
+      };
+    }
+
+    function checkL8Cards() {
+      const fb = document.getElementById('l8-feedback');
+      const slots = [
+        document.getElementById('l8-slot-0').textContent.trim(),
+        document.getElementById('l8-slot-1').textContent.trim(),
+        document.getElementById('l8-slot-2').textContent.trim(),
+        document.getElementById('l8-slot-3').textContent.trim()
+      ];
+
+      if (slots.some(s => s === '')) {
+        handleIncorrectAnswer(fb, "Make sure to place all 4 term cards into the boxes above!");
+        return;
+      }
+
+      // Check card placement!
+      if (!areCardSetsEqual(slots, l8Data.requiredCards)) {
+        handleIncorrectAnswer(fb, "Card Placement Error: Placed cards are incorrect! Check variables (e.g. +4x vs +4) and negative signs.");
+        return;
+      }
+
+      fb.className = 'feedback correct-text';
+      fb.innerHTML = '✅ Step 1 complete! Cards placed correctly. Now write the simplified expression in Step 2.';
+      document.getElementById('l8-step1-actions').style.display = 'none';
+      document.getElementById('l8-step2-container').style.display = 'block';
+    }
+
+    function checkL8Final(e) {
+      e.preventDefault();
+      const fb = document.getElementById('l8-feedback');
+      const val = document.getElementById('l8-input').value.trim();
+
+      if (compareAlgebra(val, l8Data.target)) {
+        handleCorrectAnswer(fb, "🎉 Level 8 Mastered!", initL8);
+      } else {
+        handleIncorrectAnswer(fb, "Check your final simplified algebra calculation!");
+      }
+    }
+
+    // LEVEL 9 (4 Terms Total: 2 Individual Terms + 1 Distributive Property Term)
+    function initL9() {
+      document.getElementById('l9-feedback').innerHTML = '';
+      document.getElementById('l9-input').value = '';
+      clearEmbedScratchpad(9);
+
+      let pos = selectDistPosition(); // 1 = Front (20%), 2 = Middle (40%), 3 = End (40%)
+
+      // Distributive term parameters
+      let isNegative = Math.random() < 0.75;
+      let factor = isNegative ? -getRandomInt(2, 5) : getRandomInt(2, 5);
+      let inCoeff = getRandomNonZero(-4, 4);
+      let inConst = getRandomNonZero(-8, 8);
+
+      // 2 Individual terms (one x-term, one constant term)
+      let otherXCoeff = getRandomNonZero(-6, 6);
+      let otherConstVal = getRandomNonZero(-8, 8);
+
+      let innerStr = `${formatTermForStatement(inCoeff, 'x', true)} ${formatTermForStatement(inConst, '', false)}`;
+
+      function formatDistTerm(f, isFirst) {
+        let absF = Math.abs(f);
+        let fStr = absF === 1 ? '' : `${absF}`;
+        if (isFirst) {
+          return f < 0 ? `-${fStr}(${innerStr})` : `${fStr}(${innerStr})`;
+        } else {
+          return f < 0 ? `- ${fStr}(${innerStr})` : `+ ${fStr}(${innerStr})`;
+        }
+      }
+
+      let stmt = '';
+      let xFirst = Math.random() < 0.5;
+
+      if (pos === 1) {
+        // Distributive term in FRONT (20%)
+        let distPart = formatDistTerm(factor, true);
+        let part1 = xFirst ? formatTermForStatement(otherXCoeff, 'x', false) : formatTermForStatement(otherConstVal, '', false);
+        let part2 = xFirst ? formatTermForStatement(otherConstVal, '', false) : formatTermForStatement(otherXCoeff, 'x', false);
+        stmt = `${distPart} ${part1} ${part2}`;
+      } else if (pos === 2) {
+        // Distributive term in MIDDLE (40%)
+        let part1 = xFirst ? formatTermForStatement(otherXCoeff, 'x', true) : formatTermForStatement(otherConstVal, '', true);
+        let distPart = formatDistTerm(factor, false);
+        let part2 = xFirst ? formatTermForStatement(otherConstVal, '', false) : formatTermForStatement(otherXCoeff, 'x', false);
+        stmt = `${part1} ${distPart} ${part2}`;
+      } else {
+        // Distributive term at END (40%)
+        let part1 = xFirst ? formatTermForStatement(otherXCoeff, 'x', true) : formatTermForStatement(otherConstVal, '', true);
+        let part2 = xFirst ? formatTermForStatement(otherConstVal, '', false) : formatTermForStatement(otherXCoeff, 'x', false);
+        let distPart = formatDistTerm(factor, false);
+        stmt = `${part1} ${part2} ${distPart}`;
+      }
+
+      document.getElementById('l9-statement').innerText = stmt;
+
+      let targetX = (factor * inCoeff) + otherXCoeff;
+      let targetC = (factor * inConst) + otherConstVal;
+
+      l9Data = { target: { x: targetX, y: 0, c: targetC } };
+    }
+
+    function checkL9(e) {
+      e.preventDefault();
+      const fb = document.getElementById('l9-feedback');
+      const val = document.getElementById('l9-input').value.trim();
+
+      if (compareAlgebra(val, l9Data.target)) {
+        handleCorrectAnswer(fb, "🏆 MASTER QUEST COMPLETE! YOU ARE AN ALGEBRA CHAMPION!", initL9);
+      } else {
+        handleIncorrectAnswer(fb, "Take your time! Double check each distributive step on the scratchpad.");
+      }
+    }
+
+    // CANVAS SCRATCHPAD ENGINE
+    let modalCanvas, modalCtx;
+    let modalDrawing = false, modalTool = 'pen', modalColor = '#ffffff';
+
+    let embedCanvases = {}, embedCtxs = {}, embedTools = {};
+
+    function initCanvasSystem() {
+      modalCanvas = document.getElementById('scratch-canvas');
+      modalCtx = modalCanvas.getContext('2d');
+      setupCanvasListeners(modalCanvas, 
+        () => ({ tool: modalTool, color: modalColor, ctx: modalCtx })
+      );
+
+      [4, 9].forEach(lvl => {
+        const c = document.getElementById(`scratch-canvas-l${lvl}`);
+        if (c) {
+          embedCanvases[lvl] = c;
+          embedCtxs[lvl] = c.getContext('2d');
+          embedTools[lvl] = 'pen';
+          setupCanvasListeners(c, () => ({ tool: embedTools[lvl], color: '#38bdf8', ctx: embedCtxs[lvl] }));
+        }
+      });
+    }
+
+    function setupCanvasListeners(canvas, getState) {
+      let isDrawing = false;
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: (clientX - rect.left) * (canvas.width / rect.width),
+          y: (clientY - rect.top) * (canvas.height / rect.height)
+        };
+      }
+
+      function start(e) {
+        isDrawing = true;
+        const pos = getPos(e);
+        const state = getState();
+        state.ctx.beginPath();
+        state.ctx.moveTo(pos.x, pos.y);
+      }
+
+      function move(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        const state = getState();
+        state.ctx.lineWidth = state.tool === 'eraser' ? 20 : 3;
+        state.ctx.lineCap = 'round';
+        state.ctx.strokeStyle = state.tool === 'eraser' ? '#020617' : state.color;
+        state.ctx.lineTo(pos.x, pos.y);
+        state.ctx.stroke();
+      }
+
+      function stop() { isDrawing = false; }
+
+      canvas.addEventListener('mousedown', start);
+      canvas.addEventListener('mousemove', move);
+      canvas.addEventListener('mouseup', stop);
+      canvas.addEventListener('mouseleave', stop);
+
+      canvas.addEventListener('touchstart', start);
+      canvas.addEventListener('touchmove', move);
+      canvas.addEventListener('touchend', stop);
+    }
+
+    function toggleScratchpad() {
+      const modal = document.getElementById('scratchpad-modal');
+      modal.classList.toggle('active');
+    }
+
+    function setScratchTool(tool) {
+      modalTool = tool;
+      document.getElementById('tool-pen').classList.toggle('active', tool === 'pen');
+      document.getElementById('tool-eraser').classList.toggle('active', tool === 'eraser');
+    }
+
+    function setScratchColor(color) {
+      modalColor = color;
+      setScratchTool('pen');
+    }
+
+    function clearModalScratchpad() {
+      if (modalCtx && modalCanvas) {
+        modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+      }
+    }
+
+    function setEmbedTool(lvl, tool) {
+      embedTools[lvl] = tool;
+      document.getElementById(`l${lvl}-tool-pen`).classList.toggle('active', tool === 'pen');
+      document.getElementById(`l${lvl}-tool-eraser`).classList.toggle('active', tool === 'eraser');
+    }
+
+    function clearEmbedScratchpad(lvl) {
+      if (embedCtxs[lvl] && embedCanvases[lvl]) {
+        embedCtxs[lvl].clearRect(0, 0, embedCanvases[lvl].width, embedCanvases[lvl].height);
+      }
+    }
+
+    window.onload = function() {
+      updateProgressUI();
+      initCanvasSystem();
+      showDashboard();
+    };
+  </script>
+</body>
+</html>
