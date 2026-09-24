@@ -81,6 +81,7 @@
 
     .submit-btn { background: var(--accent); color: #0f172a; border: none; padding: 12px 32px; font-size: 1.1rem; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
     .submit-btn:hover { background: #7dd3fc; transform: translateY(-2px); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     .feedback-banner { min-height: 45px; font-size: 1.1rem; font-weight: bold; margin-top: 20px; line-height: 1.4; }
     .txt-correct { color: var(--success); }
@@ -306,9 +307,20 @@
           num: num, ansList: Array.from({length: 7}, (_, i) => num * (i + 1))
         };
       }
-      if (lvlIdx === 4) { // 2B
-        let n1, n2;
-        do { n1 = randInt(2, 9); n2 = randInt(2, 9); } while (n1 === n2 || last2BNumbers.includes(n1) || last2BNumbers.includes(n2));
+      if (lvlIdx === 4) { // 2B - Enforces LCM is within first 7 multiples of both terms
+        let n1, n2, L;
+        let attempts = 0;
+        do {
+          n1 = randInt(2, 9);
+          n2 = randInt(2, 9);
+          L = lcm(n1, n2);
+          attempts++;
+        } while (
+          n1 === n2 ||
+          L / n1 > 7 ||
+          L / n2 > 7 ||
+          (attempts < 100 && (last2BNumbers.includes(n1) || last2BNumbers.includes(n2)))
+        );
         last2BNumbers = [n1, n2];
         return {
           type: '2B',
@@ -316,7 +328,7 @@
           n1: n1, n2: n2,
           ans1: Array.from({length: 7}, (_, i) => n1 * (i + 1)),
           ans2: Array.from({length: 7}, (_, i) => n2 * (i + 1)),
-          ansLCM: lcm(n1, n2)
+          ansLCM: L
         };
       }
       if (lvlIdx === 5) { // 2C
@@ -462,10 +474,13 @@
 
     function handleResult(isCorrect, msg) {
       const fb = document.getElementById('feedback-banner');
+      const submitBtn = document.querySelector('#input-area .submit-btn');
+
       if (isCorrect) {
         streak++;
         updateTracker();
         fb.innerHTML = `<span class="txt-correct">✨ Correct! Excellent work!</span>`;
+        if (submitBtn) submitBtn.disabled = true;
 
         if (streak >= 5) {
           if (!completedSubLevels.includes(currentLvlIdx)) {
@@ -490,7 +505,10 @@
       } else {
         streak = 0;
         updateTracker();
-        fb.innerHTML = `<span class="txt-incorrect">❌ ${msg || 'Incorrect. Streak reset! Try again.'}</span>`;
+        fb.innerHTML = `<span class="txt-incorrect">❌ ${msg || 'Incorrect. Streak reset! Loading new question...'}</span>`;
+        if (submitBtn) submitBtn.disabled = true;
+
+        setTimeout(() => loadNextQuestion(), 2200);
       }
     }
 
