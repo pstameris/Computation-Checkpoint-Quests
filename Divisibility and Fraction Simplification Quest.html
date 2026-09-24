@@ -929,7 +929,7 @@
       banner.className = 'feedback-banner txt-correct';
       banner.innerText = '✨ Great job! Correct!';
 
-      if (streak === 5) {
+      if (streak >= 5) {
         triggerConfetti();
         banner.innerText = `🎉 Level ${subLevels[currentLvlIdx].id} Cleared!`;
         if (!completedSubLevels.includes(currentLvlIdx)) {
@@ -939,6 +939,7 @@
           maxUnlocked = currentLvlIdx + 1;
         }
         saveProgress(false);
+        streak = 0;
         setTimeout(() => { showMap(); }, 2200);
       } else {
         setTimeout(() => { loadNextQuestion(); }, 1200);
