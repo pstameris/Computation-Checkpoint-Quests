@@ -402,6 +402,7 @@
     let currentStreak = 0;
     let currentLevel = 1;
     let completedLevels = new Set(JSON.parse(localStorage.getItem('iq_completed_levels') || '[]'));
+    let isProcessing = false;
 
     function isLevelUnlocked(lvl) {
       if (lvl === 1) return true;
@@ -477,6 +478,7 @@
 
       currentLevel = lvl;
       currentStreak = 0;
+      isProcessing = false;
       updateStreakDisplay();
 
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -493,6 +495,7 @@
     }
 
     function handleCorrectAnswer(nextProblemFn, btnId) {
+      isProcessing = true;
       currentStreak++;
       updateStreakDisplay();
       const fb = document.getElementById(`l${currentLevel}-feedback`);
@@ -563,6 +566,7 @@
     // ================= LEVEL 1 LOGIC (ORDERING) =================
     let l1Vals = [];
     function initL1() {
+      isProcessing = false;
       const pool = document.getElementById('l1-pool');
       pool.innerHTML = '';
       for (let i = 1; i <= 4; i++) {
@@ -622,6 +626,7 @@
 
     function checkL1(e) {
       e.preventDefault();
+      if (isProcessing) return;
       const slots = [
         document.getElementById('l1-slot1'),
         document.getElementById('l1-slot2'),
@@ -654,6 +659,7 @@
     // ================= LEVEL 2 LOGIC (2-CARD COMBINE) =================
     let l2Target = 0, l2Num1 = 0, l2Num2 = 0;
     function initL2() {
+      isProcessing = false;
       l2Num1 = getRandomInt(-10, 10);
       l2Num2 = getRandomInt(-10, 10);
       l2Target = l2Num1 + l2Num2;
@@ -667,6 +673,7 @@
 
     function checkL2(e) {
       e.preventDefault();
+      if (isProcessing) return;
       const val = parseInt(document.getElementById('l2-input').value, 10);
       if (val === l2Target) {
         handleCorrectAnswer(initL2, 'l2-btn');
@@ -678,6 +685,7 @@
     // ================= LEVEL 3 LOGIC (4-CARD SORT) =================
     let l3Vals = [];
     function initL3() {
+      isProcessing = false;
       const pool = document.getElementById('l3-pool');
       const pos = document.getElementById('l3-pos-zone');
       const neg = document.getElementById('l3-neg-zone');
@@ -722,6 +730,7 @@
 
     function checkL3(e) {
       e.preventDefault();
+      if (isProcessing) return;
       const userVal = parseInt(document.getElementById('l3-input').value, 10);
       const target = l3Vals.reduce((a, b) => a + b, 0);
       const poolEmpty = document.getElementById('l3-pool').children.length === 0;
@@ -746,6 +755,7 @@
     // ================= LEVEL 4 LOGIC (EQUATION BUILDER) =================
     let l4Num1 = 0, l4Num2 = 0;
     function initL4() {
+      isProcessing = false;
       l4Num1 = getRandomInt(-10, 10);
       l4Num2 = getRandomInt(-10, 10);
       document.getElementById('l4-statement').innerText = `${fmtNum(l4Num1)} + ${fmtNum(l4Num2)} = ?`;
@@ -791,6 +801,7 @@
 
     function checkL4(e) {
       e.preventDefault();
+      if (isProcessing) return;
       const slot1 = document.getElementById('l4-slot1');
       const slot2 = document.getElementById('l4-slot2');
       const val1 = slot1.children.length > 0 ? parseInt(slot1.children[0].dataset.value, 10) : null;
@@ -813,6 +824,7 @@
     let l5Target = 0, l5Num1 = 0, l5Num2 = 0;
 
     function initL5() {
+      isProcessing = false;
       document.getElementById('l5-input').value = '';
       document.getElementById('l5-feedback').innerHTML = '';
       document.getElementById('l5-btn').disabled = false;
@@ -829,6 +841,7 @@
 
     function checkL5(e) {
       e.preventDefault();
+      if (isProcessing) return;
       const val = parseInt(document.getElementById('l5-input').value, 10);
       if (val === l5Target) {
         handleCorrectAnswer(initL5, 'l5-btn');
@@ -861,6 +874,7 @@
     }
 
     function initL6() {
+      isProcessing = false;
       l6State = 'setup';
       document.getElementById('l6-slot1').innerHTML = '';
       document.getElementById('l6-slot2').innerHTML = '';
@@ -942,6 +956,7 @@
 
     function handleL6Action(e) {
       e.preventDefault();
+      if (isProcessing) return;
       const fb = document.getElementById('l6-feedback');
 
       if (l6State === 'setup') {
@@ -1006,6 +1021,7 @@
     let l7Target = 0, l7Num1 = 0, l7Num2 = 0;
 
     function initL7() {
+      isProcessing = false;
       document.getElementById('l7-input').value = '';
       document.getElementById('l7-feedback').innerHTML = '';
       document.getElementById('l7-btn').disabled = false;
@@ -1022,6 +1038,7 @@
 
     function checkL7(e) {
       e.preventDefault();
+      if (isProcessing) return;
       const val = parseInt(document.getElementById('l7-input').value, 10);
       if (val === l7Target) {
         handleCorrectAnswer(initL7, 'l7-btn');
@@ -1034,6 +1051,7 @@
     let l8Target = 0, l8Num1 = 0, l8Num2 = 0, l8IsAdd = true;
 
     function initL8() {
+      isProcessing = false;
       document.getElementById('l8-input').value = '';
       document.getElementById('l8-feedback').innerHTML = '';
       document.getElementById('l8-btn').disabled = false;
@@ -1057,6 +1075,7 @@
 
     function checkL8(e) {
       e.preventDefault();
+      if (isProcessing) return;
       const val = parseInt(document.getElementById('l8-input').value, 10);
       if (val === l8Target) {
         handleCorrectAnswer(initL8, 'l8-btn');
