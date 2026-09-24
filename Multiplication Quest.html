@@ -1347,6 +1347,8 @@
           feedback.innerText = '❌ Incorrect on second try. Streak reset to 0.';
           feedback.className = 'feedback error';
           streak = 0;
+          levelProgress[currentLevelIndex] = 0;
+          saveProgress(false);
           updateStars();
           setTimeout(loadProblem, 1800);
         }
