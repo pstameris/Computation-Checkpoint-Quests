@@ -485,6 +485,7 @@
     let currentStreak = 0;
     let currentLevel = 1;
     let graceAvailable = true;
+    let isProcessing = false; // Lock flag to prevent rapid-click / enter key submission cheats
     let completedLevels = new Set(JSON.parse(localStorage.getItem('aq_completed_levels') || '[]'));
 
     // LEVEL PROBLEM DATA STORAGE
@@ -572,6 +573,7 @@
     }
 
     function showDashboard() {
+      isProcessing = false;
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('dashboard-view').classList.add('active');
       updateProgressUI();
@@ -583,6 +585,7 @@
         return;
       }
 
+      isProcessing = false;
       currentLevel = lvl;
       currentStreak = 0;
       graceAvailable = !NO_GRACE_LEVELS.includes(lvl); // Grace shield disabled for Levels 1, 5, 7
@@ -723,6 +726,9 @@
     }
 
     function handleCorrectAnswer(fbEl, successMessage, nextInitFunc) {
+      if (isProcessing) return;
+      isProcessing = true;
+
       currentStreak++;
       if (!NO_GRACE_LEVELS.includes(currentLevel)) {
         graceAvailable = true;
@@ -736,12 +742,16 @@
         fbEl.innerHTML = `🌟 MASTERED! LEVEL ${currentLevel} COMPLETED! 🌟`;
         
         setTimeout(() => {
+          isProcessing = false;
           showDashboard();
         }, 2000);
       } else {
         fbEl.className = 'feedback correct-text';
         fbEl.innerHTML = `${successMessage} Streak: ${currentStreak}/${REQUIRED_STREAK}`;
-        setTimeout(nextInitFunc, 1200);
+        setTimeout(() => {
+          isProcessing = false;
+          nextInitFunc();
+        }, 1200);
       }
     }
 
@@ -786,6 +796,7 @@
 
     // LEVEL 1
     function initL1() {
+      isProcessing = false;
       const fb = document.getElementById('l1-feedback');
       fb.innerHTML = '';
       document.getElementById('l1-input').value = '';
@@ -794,11 +805,12 @@
       let c2 = getRandomNonZero(-8, 8);
       if (c1 > 0 && c2 > 0) c1 = -c1;
 
-      let varType = ['x', 'y', ''][getRandomInt(0, 2)];
+      // Only pick between 'x' and 'y' (removed empty string '')
+      let varType = ['x', 'y'][getRandomInt(0, 1)];
       let card1Text = formatTermCard(c1, varType);
       let card2Text = formatTermCard(c2, varType);
 
-      l1Data = { target: { x: varType==='x'? c1+c2:0, y: varType==='y'? c1+c2:0, c: varType===''? c1+c2:0 } };
+      l1Data = { target: { x: varType==='x'? c1+c2:0, y: varType==='y'? c1+c2:0, c: 0 } };
 
       const container = document.getElementById('l1-cards-container');
       container.innerHTML = '';
@@ -819,6 +831,7 @@
 
     // LEVEL 2
     function initL2() {
+      isProcessing = false;
       document.getElementById('l2-feedback').innerHTML = '';
       document.getElementById('l2-input').value = '';
       document.getElementById('l2-box-x-items').innerHTML = '';
@@ -887,6 +900,7 @@
 
     // LEVEL 3
     function initL3() {
+      isProcessing = false;
       document.getElementById('l3-feedback').innerHTML = '';
       document.getElementById('l3-input').value = '';
       document.getElementById('l3-step2-container').style.display = 'none';
@@ -981,6 +995,7 @@
 
     // LEVEL 4
     function initL4() {
+      isProcessing = false;
       document.getElementById('l4-feedback').innerHTML = '';
       document.getElementById('l4-input').value = '';
       clearEmbedScratchpad(4);
@@ -1020,6 +1035,7 @@
 
     // LEVEL 5
     function initL5() {
+      isProcessing = false;
       document.getElementById('l5-feedback').innerHTML = '';
       document.getElementById('l5-input').value = '';
       document.getElementById('l5-step2-container').style.display = 'none';
@@ -1102,6 +1118,7 @@
 
     // LEVEL 6
     function initL6() {
+      isProcessing = false;
       document.getElementById('l6-feedback').innerHTML = '';
       document.getElementById('l6-input').value = '';
       document.getElementById('l6-step2-container').style.display = 'none';
@@ -1214,6 +1231,7 @@
 
     // LEVEL 7
     function initL7() {
+      isProcessing = false;
       document.getElementById('l7-feedback').innerHTML = '';
       document.getElementById('l7-input').value = '';
       document.getElementById('l7-step2-container').style.display = 'none';
@@ -1295,6 +1313,7 @@
 
     // LEVEL 8
     function initL8() {
+      isProcessing = false;
       document.getElementById('l8-feedback').innerHTML = '';
       document.getElementById('l8-input').value = '';
       document.getElementById('l8-step2-container').style.display = 'none';
@@ -1408,6 +1427,7 @@
 
     // LEVEL 9 (4 Terms Total: 2 Individual Terms + 1 Distributive Property Term)
     function initL9() {
+      isProcessing = false;
       document.getElementById('l9-feedback').innerHTML = '';
       document.getElementById('l9-input').value = '';
       clearEmbedScratchpad(9);
