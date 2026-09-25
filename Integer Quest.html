@@ -754,6 +754,27 @@
 
     // ================= LEVEL 4 LOGIC (EQUATION BUILDER) =================
     let l4Num1 = 0, l4Num2 = 0;
+
+    function ensureL4BankHasCard(val) {
+      const bank = document.getElementById('l4-bank');
+      const hasCard = Array.from(bank.children).some(c => parseInt(c.dataset.value, 10) === val);
+      if (!hasCard) {
+        const uniqueId = `l4-bank-card-${val}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const card = createCard(uniqueId, val, '', '', '');
+        card.onclick = () => autoMoveL4(card);
+
+        let inserted = false;
+        for (let i = 0; i < bank.children.length; i++) {
+          if (val < parseInt(bank.children[i].dataset.value, 10)) {
+            bank.insertBefore(card, bank.children[i]);
+            inserted = true;
+            break;
+          }
+        }
+        if (!inserted) bank.appendChild(card);
+      }
+    }
+
     function initL4() {
       isProcessing = false;
       l4Num1 = getRandomInt(-10, 10);
@@ -772,17 +793,24 @@
       const slot1 = document.getElementById('l4-slot1');
       const slot2 = document.getElementById('l4-slot2');
       if (card.parentElement.id === 'l4-bank') {
-        if (slot1.children.length === 0) slot1.appendChild(card);
-        else if (slot2.children.length === 0) slot2.appendChild(card);
+        let targetSlot = null;
+        if (slot1.children.length === 0) targetSlot = slot1;
+        else if (slot2.children.length === 0) targetSlot = slot2;
+
+        if (targetSlot) {
+          const val = parseInt(card.dataset.value, 10);
+          targetSlot.appendChild(card);
+          ensureL4BankHasCard(val);
+        }
       } else {
-        document.getElementById('l4-bank').appendChild(card);
+        card.remove();
       }
     }
 
     function clearSlotL4(slotKey) {
       if (document.getElementById('l4-btn').disabled) return;
       const slot = document.getElementById(`l4-${slotKey}`);
-      if (slot && slot.children.length > 0) document.getElementById('l4-bank').appendChild(slot.children[0]);
+      if (slot && slot.children.length > 0) slot.children[0].remove();
     }
 
     function dropL4(e, targetId) {
@@ -790,12 +818,16 @@
       if (document.getElementById('l4-btn').disabled) return;
       const card = document.getElementById(e.dataTransfer.getData('text/plain'));
       if (!card) return;
+
       if (targetId.startsWith('slot')) {
         const slot = document.getElementById(`l4-${targetId}`);
-        if (slot.children.length > 0) document.getElementById('l4-bank').appendChild(slot.children[0]);
+        if (slot.children.length > 0) slot.children[0].remove();
+        
+        const val = parseInt(card.dataset.value, 10);
         slot.appendChild(card);
+        ensureL4BankHasCard(val);
       } else {
-        document.getElementById('l4-bank').appendChild(card);
+        card.remove();
       }
     }
 
