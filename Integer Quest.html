@@ -576,10 +576,13 @@
       document.getElementById('l1-btn').disabled = false;
 
       l1Vals = [];
-      while (l1Vals.length < 4) {
-        let r = getRandomInt(-10, 10);
-        if (!l1Vals.includes(r)) l1Vals.push(r);
-      }
+      do {
+        l1Vals = [];
+        while (l1Vals.length < 4) {
+          let r = getRandomInt(-10, 10, true);
+          if (!l1Vals.includes(r)) l1Vals.push(r);
+        }
+      } while (!l1Vals.some(v => v < 0));
 
       l1Vals.forEach((v, i) => {
         const c = createCard(`l1-c-${i}`, v, '75px', '95px', '1.8rem');
@@ -660,8 +663,10 @@
     let l2Target = 0, l2Num1 = 0, l2Num2 = 0;
     function initL2() {
       isProcessing = false;
-      l2Num1 = getRandomInt(-10, 10);
-      l2Num2 = getRandomInt(-10, 10);
+      do {
+        l2Num1 = getRandomInt(-10, 10, true);
+        l2Num2 = getRandomInt(-10, 10, true);
+      } while (l2Num1 > 0 && l2Num2 > 0);
       l2Target = l2Num1 + l2Num2;
 
       styleCardEl(document.getElementById('l2-card1'), l2Num1);
@@ -694,12 +699,14 @@
       document.getElementById('l3-feedback').innerHTML = '';
       document.getElementById('l3-btn').disabled = false;
 
-      l3Vals = [
-        getRandomInt(-10, 10, true),
-        getRandomInt(-10, 10, true),
-        getRandomInt(-10, 10, true),
-        getRandomInt(-10, 10, true)
-      ];
+      do {
+        l3Vals = [
+          getRandomInt(-10, 10, true),
+          getRandomInt(-10, 10, true),
+          getRandomInt(-10, 10, true),
+          getRandomInt(-10, 10, true)
+        ];
+      } while (!l3Vals.some(v => v < 0));
 
       l3Vals.forEach((v, i) => {
         const c = createCard(`l3-c-${i}`, v, '70px', '90px', '1.8rem');
@@ -777,8 +784,10 @@
 
     function initL4() {
       isProcessing = false;
-      l4Num1 = getRandomInt(-10, 10);
-      l4Num2 = getRandomInt(-10, 10);
+      do {
+        l4Num1 = getRandomInt(-10, 10, true);
+        l4Num2 = getRandomInt(-10, 10, true);
+      } while (l4Num1 > 0 && l4Num2 > 0);
       document.getElementById('l4-statement').innerText = `${fmtNum(l4Num1)} + ${fmtNum(l4Num2)} = ?`;
       document.getElementById('l4-slot1').innerHTML = '';
       document.getElementById('l4-slot2').innerHTML = '';
